@@ -50,13 +50,14 @@
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/yourusername/leafmed.git
+git clone https://github.com/RippedKek/leafmed.git
 cd leafmed
+cd server
 npm install
-npx react-native run-android
+cd ../client
+npm install
+npx expo start
 ```
-
-_For iOS, additional setup via Xcode is required._
 
 ## 📈 Business Model
 
