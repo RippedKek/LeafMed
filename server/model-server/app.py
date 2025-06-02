@@ -26,15 +26,12 @@ def preprocess_image(image_bytes):
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    print("Request received")
     data = request.get_json()
 
     if not data or 'image' not in data:
         return jsonify({'error': 'No image provided'}), 400
 
     base64_str = data['image']
-    print("Data keys:", data.keys())
-    print("Image length:", len(base64_str))
 
     try:
         image_bytes = base64.b64decode(base64_str)
