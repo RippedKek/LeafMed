@@ -9,19 +9,25 @@ const BottomNav = () => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.navItem} onPress={() => router.push('/')}>
-        <Feather name="home" size={24} color="#2F4F2D" />
+        <Feather name='home' size={24} color='#2F4F2D' />
         <Text style={styles.label}>Home</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navItem}>
-        <MaterialCommunityIcons name="barcode-scan" size={24} color="#2F4F2D" />
+      <TouchableOpacity
+        style={styles.navItem}
+        onPress={() => router.push('/scan')}
+      >
+        <MaterialCommunityIcons name='barcode-scan' size={24} color='#2F4F2D' />
         <Text style={styles.label}>Scan</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem}>
-        <Feather name="message-circle" size={24} color="#2F4F2D" />
+        <Feather name='message-circle' size={24} color='#2F4F2D' />
         <Text style={styles.label}>Chat</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
-        <Feather name="user" size={24} color="#000" />
+      <TouchableOpacity
+        style={styles.navItem}
+        onPress={() => router.push('/profile')}
+      >
+        <Feather name='user' size={24} color='#000' />
         <Text style={styles.label}>Profile</Text>
       </TouchableOpacity>
     </View>
