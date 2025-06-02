@@ -2,9 +2,11 @@ import React from 'react'
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native'
 import { useRouter } from 'expo-router'
 import LeafMedLogo from './LeafMedLogo'
+import { useUser } from '@clerk/clerk-expo'
 
 const Header = () => {
   const router = useRouter()
+  const { user } = useUser()
 
   const handleProfilePress = () => {
     router.push('/profile')
@@ -13,9 +15,16 @@ const Header = () => {
   return (
     <View style={styles.container}>
       <LeafMedLogo />
-      <TouchableOpacity onPress={handleProfilePress} style={styles.profileIconContainer}>
+      <TouchableOpacity
+        onPress={handleProfilePress}
+        style={styles.profileIconContainer}
+      >
         <Image
-          source={require('../../../assets/images/home/ape.jpg')}
+          source={
+            user?.imageUrl
+              ? { uri: user.imageUrl }
+              : require('../../../assets/images/home/ape.jpg')
+          }
           style={styles.profileIcon}
         />
       </TouchableOpacity>

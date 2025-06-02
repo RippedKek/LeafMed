@@ -12,6 +12,8 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import { useUser, useAuth } from '@clerk/clerk-expo'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 interface Remedy {
   name: string
@@ -64,12 +66,20 @@ const dummyPinnedDiseases: Disease[] = [
 
 const ProfilePage = () => {
   const router = useRouter()
-  const [username, setUsername] = useState<string>('JohnDoe')
-  const [email, setEmail] = useState<string>('johndoe@example.com')
+  const { signOut } = useAuth()
+  const { user } = useUser()
+  const insets = useSafeAreaInsets()
   const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false)
   const [isEditingEmail, setIsEditingEmail] = useState<boolean>(false)
   const [selectedDisease, setSelectedDisease] = useState<Disease | null>(null)
   const [modalVisible, setModalVisible] = useState<boolean>(false)
+
+  const [username, setUsername] = useState<string>(
+    user?.username || user?.firstName + ' ' + user?.lastName || ''
+  )
+  const [email, setEmail] = useState<string>(
+    user?.emailAddresses[0]?.emailAddress || ''
+  )
 
   const openDiseaseModal = (disease: Disease) => {
     setSelectedDisease(disease)
@@ -81,17 +91,43 @@ const ProfilePage = () => {
     setModalVisible(false)
   }
 
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push('/sign-in')
+    } catch (err) {
+      console.error('Error signing out:', err)
+    }
+  }
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      style={[
+        styles.scrollView,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+      contentContainerStyle={styles.container}
+    >
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.push('/')} style={styles.backButton}>
-          <Feather name="arrow-left" size={24} color="#2F4F2D" />
+        <TouchableOpacity
+          onPress={() => router.push('/')}
+          style={styles.backButton}
+        >
+          <Feather name='arrow-left' size={24} color='#2F4F2D' />
         </TouchableOpacity>
         <View style={styles.profileIconContainerCentered}>
-          <Image
-            source={require('../assets/images/home/ape.jpg')}
-            style={styles.profileIcon}
-          />
+          {user?.imageUrl ? (
+            <Image source={{ uri: user.imageUrl }} style={styles.profileIcon} />
+          ) : (
+            <View style={styles.defaultAvatarContainer}>
+              <Text style={styles.defaultAvatarText}>
+                {user?.firstName?.[0] || user?.username?.[0] || '?'}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -99,14 +135,13 @@ const ProfilePage = () => {
         <Text style={styles.label}>Username</Text>
         {isEditingUsername ? (
           <View style={styles.editRow}>
-            
-              <TextInput
-                style={styles.input}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-              />
-            
+            <TextInput
+              style={styles.input}
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize='none'
+            />
+
             <TouchableOpacity
               style={styles.saveButton}
               onPress={() => setIsEditingUsername(false)}
@@ -116,7 +151,7 @@ const ProfilePage = () => {
           </View>
         ) : (
           <View style={styles.editRow}>
-            <Text style={styles.value}>{username}</Text>
+            <Text style={styles.value}>{username || 'No username set'}</Text>
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => setIsEditingUsername(true)}
@@ -129,35 +164,9 @@ const ProfilePage = () => {
 
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>Email</Text>
-        {isEditingEmail ? (
-          <View style={styles.editRow}>
-            
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={() => setIsEditingEmail(false)}
-            >
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.editRow}>
-            <Text style={styles.value}>{email}</Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setIsEditingEmail(true)}
-            >
-              <Text style={styles.editButtonText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.editRow}>
+          <Text style={styles.value}>{email || 'No email set'}</Text>
+        </View>
       </View>
 
       <View style={styles.pinnedContainer}>
@@ -180,7 +189,7 @@ const ProfilePage = () => {
       </View>
 
       <View style={styles.signOutButtonContainer}>
-        <TouchableOpacity style={styles.signOutButton} onPress={() => alert('Sign out pressed')}>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutButtonText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
@@ -188,7 +197,7 @@ const ProfilePage = () => {
       <Modal
         visible={modalVisible}
         transparent={true}
-        animationType="slide"
+        animationType='slide'
         onRequestClose={closeDiseaseModal}
       >
         <View style={styles.modalBackground}>
@@ -204,7 +213,9 @@ const ProfilePage = () => {
                     <Image source={remedy.image} style={styles.remedyImage} />
                     <View style={styles.remedyTextContainer}>
                       <Text style={styles.remedyName}>{remedy.name}</Text>
-                      <Text style={styles.remedyDosage}>Dosage: {remedy.dosage}</Text>
+                      <Text style={styles.remedyDosage}>
+                        Dosage: {remedy.dosage}
+                      </Text>
                       <Text style={styles.remedyRecipe}>{remedy.recipe}</Text>
                     </View>
                   </View>
@@ -225,11 +236,13 @@ const ProfilePage = () => {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingTop: 40,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  scrollView: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  container: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   headerRow: {
     flexDirection: 'row',
@@ -244,13 +257,25 @@ const styles = StyleSheet.create({
     padding: 10,
     zIndex: 10,
   },
-
   profileIconContainerCentered: {
     alignSelf: 'center',
     width: 100,
     height: 100,
     borderRadius: 50,
     overflow: 'hidden',
+    backgroundColor: '#DCECDC',
+  },
+  defaultAvatarContainer: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#DCECDC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  defaultAvatarText: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#2F4F2D',
   },
   profileIcon: {
     width: '100%',
@@ -260,7 +285,6 @@ const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 20,
   },
-
   label: {
     fontWeight: 'bold',
     fontSize: 16,
