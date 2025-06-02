@@ -1,72 +1,51 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { useAuth, useUser } from '@clerk/clerk-expo'
-import { useRouter } from 'expo-router'
+import React from 'react'
+import { View, StyleSheet, ScrollView } from 'react-native'
+import Header from './components/Home/Header'
+import SearchBar from './components/Home/SearchBar'
+import RecommendedRequests from './components/Home/RecommendedRequests'
+import Feed from './components/Home/Feed'
+import BottomNav from './components/Home/BottomNav'
 
-export default function WelcomePage() {
-  const { signOut } = useAuth()
-  const { user } = useUser()
-  const router = useRouter()
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      router.push('/sign-in')
-    } catch (err) {
-      console.error('Error signing out:', err)
-    }
-  }
-
+export default function HomePage() {
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>
-          Welcome, {user?.firstName || 'User'}!
-        </Text>
-        <Text style={styles.subtitle}>
-          This is your welcome page. You can customize it further.
-        </Text>
+    <View style={styles.safeArea}>
+      <View style={styles.container}>
+        <Header />
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.searchWrapper}>
+            <SearchBar />
+          </View>
+          <RecommendedRequests />
+          <View style={styles.feedWrapper}>
+            <Feed />
+          </View>
+        </ScrollView>
+        <BottomNav />
       </View>
-
-      <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#DCECDC',
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
+    backgroundColor: '#F5F9F6',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  scrollContent: {
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 80,
   },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
+  searchWrapper: {
+    marginBottom: 30,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  signOutButton: {
-    backgroundColor: '#ff4444',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  signOutText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+  feedWrapper: {
+    marginTop: 30,
   },
 })
