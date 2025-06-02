@@ -1,11 +1,14 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
 
 const BottomNav = () => {
+  const router = useRouter()
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.navItem}>
+      <TouchableOpacity style={styles.navItem} onPress={() => router.push('/')}>
         <Feather name="home" size={24} color="#2F4F2D" />
         <Text style={styles.label}>Home</Text>
       </TouchableOpacity>
@@ -17,7 +20,7 @@ const BottomNav = () => {
         <Feather name="message-circle" size={24} color="#2F4F2D" />
         <Text style={styles.label}>Chat</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navItem}>
+      <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
         <Feather name="user" size={24} color="#000" />
         <Text style={styles.label}>Profile</Text>
       </TouchableOpacity>
