@@ -14,7 +14,7 @@ const BottomNav = () => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => router.push('/scan')}
+        onPress={() => router.push('/scan' as any)}//as any added
       >
         <MaterialCommunityIcons name='barcode-scan' size={24} color='#2F4F2D' />
         <Text style={styles.label}>Scan</Text>

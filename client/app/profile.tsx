@@ -14,6 +14,7 @@ import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useUser, useAuth } from '@clerk/clerk-expo'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import ProfileProCard from './components/ProfileProCard'
 
 interface Remedy {
   name: string
@@ -106,10 +107,10 @@ const ProfilePage = () => {
         styles.scrollView,
         {
           paddingTop: insets.top,
-          paddingBottom: insets.bottom,
+          paddingBottom: insets.bottom + 130,
         },
       ]}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { flexGrow: 1 }]}
     >
       <View style={styles.headerRow}>
         <TouchableOpacity
@@ -186,12 +187,12 @@ const ProfilePage = () => {
             </TouchableOpacity>
           )}
         />
-      </View>
-
-      <View style={styles.signOutButtonContainer}>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutButtonText}>Sign Out</Text>
-        </TouchableOpacity>
+        <View style={styles.profileProCardContainerWithMargin}>
+          <ProfileProCard />
+          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+            <Text style={styles.signOutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Modal
@@ -334,6 +335,7 @@ const styles = StyleSheet.create({
   },
   pinnedContainer: {
     marginTop: 10,
+    paddingBottom: 40,
   },
   pinnedTitle: {
     fontSize: 18,
@@ -370,7 +372,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   signOutButtonContainer: {
-    marginTop: 20,
+    marginTop: 10,
     marginLeft: 10,
   },
   modalBackground: {
@@ -439,6 +441,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  profileProCardContainer: {
+    alignItems: 'center',
+  },
+  profileProCardContainerWithMargin: {
+    alignItems: 'center',
+    marginTop: 30,
   },
 })
 
