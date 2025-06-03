@@ -41,6 +41,14 @@ export default function Result() {
         <View style={styles.resultContainer}>
           <Text style={styles.resultTitle}>Scan Result</Text>
           <Text style={styles.resultText}>{label}</Text>
+          <TouchableOpacity style={styles.moreInfoButton}>
+            <Ionicons
+              name='information-circle-outline'
+              size={20}
+              color='#DCECDC'
+            />
+            <Text style={styles.moreInfoText}>Learn More</Text>
+          </TouchableOpacity>
           {target && isMatch === 'false' && (
             <View style={styles.mismatchContainer}>
               <Ionicons name='close-circle' size={24} color='#ff6b6b' />
@@ -142,5 +150,20 @@ const styles = StyleSheet.create({
     color: '#DCECDC',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  moreInfoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2f4f2d',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginTop: 16,
+  },
+  moreInfoText: {
+    fontSize: 16,
+    color: '#DCECDC',
+    fontWeight: '600',
+    marginLeft: 8,
   },
 })

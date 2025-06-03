@@ -1,7 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import chatRoutes from './routes/chatRoutes.js'
+import healthRoutes from './routes/healthRoutes.js'
 
 dotenv.config()
 
@@ -12,101 +13,9 @@ const port = process.env.PORT || 8000
 app.use(cors())
 app.use(express.json())
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-
-const MAX_RETRIES = 3
-const RETRY_DELAY = 1000
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-const generateAIResponse = async (prompt, retryCount = 0) => {
-  try {
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    return response.text()
-  } catch (error) {
-    if (error.message.includes('503') && retryCount < MAX_RETRIES) {
-      console.log(`Retry attempt ${retryCount + 1} of ${MAX_RETRIES}`)
-      await sleep(RETRY_DELAY * (retryCount + 1))
-      return generateAIResponse(prompt, retryCount + 1)
-    }
-    throw error
-  }
-}
-
-function formatResponse(text) {
-  if (text.includes('Only symptoms are allowed')) {
-    return { disease: 'Only symptoms are allowed', ingredientsArray: [] }
-  }
-  const response = text.split('\n')
-  const disease = response[0]
-  let ingredients = response[1]
-  ingredients = ingredients.replace('[', '').replace(']', '')
-  const ingredientsArray = ingredients.split(',').map((item) => item.trim())
-  return { disease, ingredientsArray }
-}
-
-// Chat endpoint
-app.post('/chat', async (req, res) => {
-  try {
-    const { message } = req.body
-
-    if (!message) {
-      return res.status(400).json({
-        error: 'Message is required',
-        userMessage: 'Please provide a message to continue.',
-      })
-    }
-
-    const prompt = `
-    The following prompt will give you disease symptoms which you need to predict. After that, give a list of herbal ingredients that will remedy it. The ingredients name should be how they are familiar in the indian subcontinent. Like neem, tulsi, etc. If the prompt is about something else other than symptoms, reply with "Only symptoms are allowed"
-
-    Output format:
-    {Most probable disease}
-    [Ingredient 1,Ingredient 2,Ingridient 3]
-
-    If prompt is not a symptom:
-    "Only symptoms are allowed"
-
-    Example Prompt 1: 
-    headache, runny nose
-    Output:
-    Common Cold
-    [Ginger, Garlic, Honey]
-
-    Example Prompt 2:
-    hello I am elon musk
-    Output: 
-    Only symptoms are allowed
-
-    Prompt: ${message}`
-
-    const text = await generateAIResponse(prompt)
-
-    const { disease, ingredientsArray } = formatResponse(text)
-
-    res.json({ disease, ingredientsArray })
-  } catch (error) {
-    console.error('Error:', error)
-
-    let userMessage = 'An unexpected error occurred. Please try again later.'
-    if (error.message.includes('503')) {
-      userMessage =
-        'The AI service is currently experiencing high load. Please try again in a few moments.'
-    }
-
-    res.status(503).json({
-      error: error.message,
-      userMessage,
-    })
-  }
-})
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' })
-})
+// Routes
+app.use('/chat', chatRoutes)
+app.use('/health', healthRoutes)
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`)
