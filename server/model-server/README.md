@@ -1,136 +1,120 @@
 # LeafMed Model Server
 
-This is the machine learning model server for LeafMed, responsible for processing and classifying plant images. The server uses a TensorFlow model to identify medicinal plants and their properties.
+This is the model server component of LeafMed, providing AI-powered leaf disease detection and classification services through RESTful APIs.
+
+## Features
+
+- Leaf detection using YOLO object detection
+- Disease classification using Vision Transformer (ViT)
+- Multiple API versions for different use cases
+- Base64 image processing
+- Cross-Origin Resource Sharing (CORS) support
 
 ## Prerequisites
 
-- Python 3.8 or higher
-- pip (Python package installer)
-- Virtual environment (recommended)
+- Python 3.8+
+- pip package manager
+- Required model files in the `model/` directory:
+  - `model.keras`: TensorFlow model for v1 API
+  - `yolo11x_leaf.pt`: YOLO model for leaf detection
+  - `model-v2/`: Vision Transformer model files
 
-## Project Structure
+## Installation
 
-```
-model-server/
-├── image/              # Test images directory
-├── model/              # Contains the TensorFlow model
-├── venv/              # Virtual environment (created during setup)
-├── .env               # Environment variables
-├── .gitignore         # Git ignore file
-├── app.py             # Main Flask application
-├── ping.py            # Server test script
-├── labels.txt         # Model labels
-└── requirements.txt   # Python dependencies
-```
+1. Clone the repository
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Setup
+## Environment Variables
 
-1. Create and activate a virtual environment:
+Create a `.env` file with the following variables:
 
-```bash
-# Windows
-python -m venv venv
-.\venv\Scripts\activate
+- `HOST`: Server host (default: 0.0.0.0)
+- `PORT`: Server port (default: 5000)
 
-# Linux/MacOS
-python3 -m venv venv
-source venv/bin/activate
-```
+## API Endpoints
 
-2. Install dependencies:
+### 1. V2 Detect Endpoint
 
-```bash
-pip install -r requirements.txt
-```
+**POST** `/v2/detect`
 
-3. Create a `.env` file in the root directory with the following variables:
+- Detects and crops leaf from the input image
+- Request body: `{ "image": "base64_encoded_image" }`
+- Response:
+  ```json
+  {
+    "leaf_detected": true,
+    "cropped_leaf": "base64_encoded_cropped_image",
+    "box": { "x1": 0, "y1": 0, "x2": 100, "y2": 100 }
+  }
+  ```
 
-```env
-HOST=0.0.0.0  # or your preferred host
-PORT=5000     # or your preferred port
-```
+### 2. V2 Predict Endpoint
 
-## Running the Server
+**POST** `/v2/predict`
 
-1. Activate the virtual environment (if not already activated):
+- Classifies leaf disease using Vision Transformer
+- Request body: `{ "image": "base64_encoded_image" }`
+- Response:
+  ```json
+  {
+    "label": "disease_classification"
+  }
+  ```
 
-```bash
-# Windows
-.\venv\Scripts\activate
+### 3. V1 Predict Endpoint (Legacy)
 
-# Linux/MacOS
-source venv/bin/activate
-```
+**POST** `/v1/predict`
 
-2. Start the server:
+- Legacy disease classification using TensorFlow
+- Request body: `{ "image": "base64_encoded_image" }`
+- Response:
+  ```json
+  {
+    "index": 0,
+    "label": "disease_name",
+    "confidence": 0.9999
+  }
+  ```
 
-```bash
-python app.py
-```
+## Testing
 
-The server will start on the host and port specified in your `.env` file (defaults to 0.0.0.0:5000 if not specified).
-
-## Testing the Server
-
-You can test if the server is working correctly using the ping script:
+Use the provided `ping.py` script to test the API endpoints:
 
 ```bash
 python ping.py
 ```
 
-This will send a test image to the server and print the classification results.
+The script tests both detection and prediction endpoints using a sample image.
 
-## API Endpoints
+## Model Information
 
-### POST /predict
-
-Accepts a base64 encoded image and returns the classification results.
-
-**Request Body:**
-
-```json
-{
-  "image": "base64_encoded_image_string"
-}
-```
-
-**Response:**
-
-```json
-{
-  "index": 0,
-  "label": "plant_name",
-  "confidence": 0.9876
-}
-```
+- **YOLO Model**: Used for leaf detection and cropping
+- **Vision Transformer**: Primary model for disease classification
+- **TensorFlow Model**: Legacy model for basic classification
 
 ## Error Handling
 
-The server includes basic error handling for:
+The API includes error handling for:
 
-- Missing image in request
+- Missing images in requests
 - Invalid base64 encoding
-- Model prediction errors
+- Image decoding errors
+- Model prediction failures
 
 ## Development
 
-- The server uses Flask for the REST API
-- CORS is enabled for cross-origin requests
-- The TensorFlow model is loaded once at startup
-- Environment variables can be configured in the `.env` file
+To run the server in development mode:
 
-## Troubleshooting
+```bash
+python app.py
+```
 
-1. If you get a "Model not found" error:
-
-   - Ensure the model file exists in the `model/` directory
-   - The model should be named `model.keras`
-
-2. If you get a port binding error:
-
-   - Check if the port is already in use
-   - Modify the PORT in your `.env` file
-
-3. If you get import errors:
-   - Ensure you're in the virtual environment
-   - Try reinstalling dependencies: `pip install -r requirements.txt`
+The server will start with debug mode enabled by default.
