@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -13,8 +15,15 @@ import { Ionicons } from '@expo/vector-icons'
 import Header from './components/Home/Header'
 import BottomNav from './components/Home/BottomNav'
 
+interface HerbInfo {
+  [key: string]: string | string[]
+}
+
 export default function Result() {
   const router = useRouter()
+  const [modalVisible, setModalVisible] = useState(false)
+  const [herbInfo, setHerbInfo] = useState<HerbInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const { imageUri, croppedImageUri, label, target, isMatch } =
     useLocalSearchParams<{
       imageUri: string
@@ -23,6 +32,45 @@ export default function Result() {
       target?: string
       isMatch?: string
     }>()
+
+  const getHerbInfo = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch('http://192.168.0.116:8000/info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ herb: label }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.userMessage || 'Failed to fetch herb information'
+        )
+      }
+
+      const data = await response.json()
+
+      if (!data.info) {
+        throw new Error('No information available for this herb')
+      }
+
+      setHerbInfo(data.info)
+      setModalVisible(true)
+    } catch (error: any) {
+      console.error('Error fetching herb info:', error)
+      setHerbInfo({
+        error:
+          error.message ||
+          'Failed to load herb information. Please try again later.',
+      })
+      setModalVisible(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -41,13 +89,19 @@ export default function Result() {
         <View style={styles.resultContainer}>
           <Text style={styles.resultTitle}>Scan Result</Text>
           <Text style={styles.resultText}>{label}</Text>
-          <TouchableOpacity style={styles.moreInfoButton}>
+          <TouchableOpacity
+            style={styles.moreInfoButton}
+            onPress={getHerbInfo}
+            disabled={isLoading}
+          >
             <Ionicons
               name='information-circle-outline'
               size={20}
               color='#DCECDC'
             />
-            <Text style={styles.moreInfoText}>Learn More</Text>
+            <Text style={styles.moreInfoText}>
+              {isLoading ? 'Loading...' : 'Learn More'}
+            </Text>
           </TouchableOpacity>
           {target && isMatch === 'false' && (
             <View style={styles.mismatchContainer}>
@@ -65,6 +119,44 @@ export default function Result() {
           <Text style={styles.scanButtonText}>SCAN ANOTHER</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        animationType='slide'
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{label}</Text>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name='close' size={24} color='#2f4f2d' />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalBody}>
+              {herbInfo ? (
+                Object.entries(herbInfo).map(([key, value]) => (
+                  <View key={key} style={styles.infoSection}>
+                    <Text style={styles.infoLabel}>
+                      {key.charAt(0).toUpperCase() + key.slice(1)}:
+                    </Text>
+                    <Text style={styles.infoText}>
+                      {Array.isArray(value) ? value.join(', ') : value}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <ActivityIndicator size='large' color='#2f4f2d' />
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       <BottomNav />
     </SafeAreaView>
   )
@@ -165,5 +257,57 @@ const styles = StyleSheet.create({
     color: '#DCECDC',
     fontWeight: '600',
     marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(47, 79, 45, 0.1)',
+    paddingBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2f4f2d',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  modalBody: {
+    maxHeight: '90%',
+  },
+  infoSection: {
+    marginBottom: 15,
+  },
+  infoLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2f4f2d',
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
   },
 })
