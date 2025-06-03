@@ -4,11 +4,45 @@
 
 ---
 
+## 🏗️ Project Architecture
+
+### Client (`/client`)
+
+- React Native mobile application
+- Features a modern, intuitive UI for symptom input and plant recognition
+- Integrates with both backend services for data management and AI features
+
+### Server Components
+
+#### 1. Backend Server (`/server/backend`)
+
+- Main application server handling:
+  - User authentication (Clerk)
+  - Data persistence (Firebase)
+  - Business logic
+  - API endpoints
+
+#### 2. Model Server (`/server/model-server`)
+
+- Dedicated Flask server for AI/ML operations
+- Components:
+  - `app.py`: Main Flask application with REST endpoints
+  - `model/`: Contains trained AI models
+    - YOLO model for leaf detection
+    - ViT model for plant classification
+    - TensorFlow model for disease prediction
+  - `labels.txt`: Classification labels for plant species
+  - Environment configuration via `.env`
+
+---
+
 ## 📱 Features
 
 - **Symptom-based Disease Detection** – Users input symptoms, and the app predicts the most probable herbally-treatable illness using AI.
 - **Herbal Remedy Suggestions** – Get accurate herbal recipes with ingredients, preparation steps, and dosage.
-- **Plant/Leaf Recognition** – Use the camera to identify medicinal plants using TensorFlow Lite.
+- **Plant/Leaf Recognition** – Use the camera to identify medicinal plants using:
+  - YOLO for leaf detection
+  - Vision Transformer (ViT) for species classification
 - **Offline Mode** – Core features work without internet connectivity for rural use.
 - **Multilingual Support** – Available in both English and Bangla.
 - **Recipe Saving & Reminders** – Save favorite herbal recipes and set reminders.
@@ -18,46 +52,97 @@
 
 ## 🛠️ Tech Stack
 
-| Layer        | Tools                                                                  |
-| ------------ | ---------------------------------------------------------------------- |
-| Frontend     | React Native                                                           |
-| Backend      | Firebase                                                               |
-| AI Models    | Gemini/OpenAI (symptom → disease), TensorFlow Lite (plant recognition) |
-| Image Picker | react-native-image-picker                                              |
-| Camera       | react-native-camera / expo-camera                                      |
-| Auth         | Clerk                                                                  |
+### Frontend
+
+- React Native
+- React Native Image Picker
+- Expo Camera
+
+### Backend Services
+
+- Firebase (Data Storage)
+- Clerk (Authentication)
+
+### AI/ML Server
+
+- Flask
+- TensorFlow
+- PyTorch
+- Transformers
+- YOLO (Ultralytics)
+- Python Image Processing (Pillow)
 
 ---
 
-## 🧠 AI Capabilities
+## 🚀 Setup Instructions
 
-- **Disease Prediction**: NLP-based classification from symptom text.
-- **Herbal Recipe Generator**: Maps disease to traditional remedies.
-- **Plant Classification**: TensorFlow Lite model trained on leaf images of common herbs like Neem, Tulsi, Basak, etc.
-
----
-
-## 💡 How It Works
-
-1. User inputs symptoms (e.g., “sore throat, fever”).
-2. AI predicts the most likely disease.
-3. App shows the corresponding herbal remedy.
-4. User can scan a plant leaf to verify the ingredient.
-5. Recipes can be saved, pinned, and reminders set.
-
----
-
-## 📦 Installation
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/RippedKek/leafmed.git
 cd leafmed
-cd server
+```
+
+### 2. Setup Model Server
+
+```bash
+cd server/model-server
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+### 3. Setup Backend Server
+
+```bash
+cd ../backend
 npm install
-cd ../client
+npm run dev
+```
+
+### 4. Setup Mobile App
+
+```bash
+cd ../../client
 npm install
 npx expo start
 ```
+
+### Environment Variables
+
+Create `.env` files in respective directories:
+
+Model Server `.env`:
+
+```
+HOST=0.0.0.0
+PORT=5000
+```
+
+---
+
+## 🧠 AI Model Endpoints
+
+### Model Server API (`localhost:5000`)
+
+1. `/v1/predict` - Legacy plant classification endpoint
+
+   - Input: Base64 encoded image
+   - Output: Plant classification with confidence score
+
+2. `/v2/detect` - Advanced leaf detection and cropping
+
+   - Input: Base64 encoded image
+   - Output: Cropped leaf image and bounding box
+
+3. `/v2/predict` - Modern plant classification using ViT
+   - Input: Base64 encoded image
+   - Output: Plant species classification
+
+**Refer to the README of model-server for better understanding.**
+
+---
 
 ## 📈 Business Model
 
@@ -73,8 +158,10 @@ Additional monetization:
 
 ## 🧪 Dataset & Training
 
-- Plant classification model trained on leaf image dataset using TensorFlow Lite Model Maker
-- Disease–symptom–herb mapping curated from verified herbal medicine sources
+- Plant classification models trained on custom leaf image dataset
+- YOLO model fine-tuned for leaf detection
+- Vision Transformer (ViT) adapted for species classification
+- Disease–symptom–herb mapping curated from verified sources
 
 ## 🙌 Acknowledgments
 
@@ -82,4 +169,4 @@ Additional monetization:
 - Built for the BdApps Innovation Summit 2025
 - Contributors: Masnun Nuha Chowdhury, Tanjeeb Meheran Rohan
 
-> “When hospitals are far and herbs are near, LeafMed is the bridge.”
+> "When hospitals are far and herbs are near, LeafMed is the bridge."
