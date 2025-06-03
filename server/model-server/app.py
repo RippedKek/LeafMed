@@ -86,7 +86,7 @@ def predict_with_crop():
     for i, name in enumerate(class_names):
         if name.lower() == "leaf":
             x1, y1, x2, y2 = map(int, xyxy[i])
-            cropped = image.crop((x1, y1, x2, y2))
+            cropped = image.crop((x1 - x1 * 0.1, y1 - y1 * 0.1, x2 + x2 * 0.1, y2 + y2 * 0.1))
             cropped_base64 = image_to_base64(cropped)
 
             return jsonify({
