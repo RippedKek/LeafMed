@@ -1,5 +1,14 @@
 import React, { useState } from 'react'
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, Pressable } from 'react-native'
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Modal,
+  Pressable,
+} from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 const dummyData = [
@@ -8,14 +17,14 @@ const dummyData = [
     title: 'Holy Basil (Tulsi)',
     sciName: 'Ocimum tenuiflorum',
     description: 'Recommended For: Stress, Anxiety & Respiratory Health',
-    image: require('../../../assets/images/home/basil.webp')
+    image: require('../../../assets/images/home/basil.webp'),
   },
   {
     id: '2',
     title: 'Holy Basil (Tulsi)',
     sciName: 'Ocimum tenuiflorum',
     description: 'Recommended For: Stress, Anxiety & Respiratory Health',
-    image: require('../../../assets/images/home/basil.webp')
+    image: require('../../../assets/images/home/basil.webp'),
   },
 ]
 
@@ -50,11 +59,18 @@ const Feed = () => {
           <Text style={styles.description}>{item.description}</Text>
         </View>
       </View>
-      <TouchableOpacity onPress={() => openModal(item.image)} style={styles.imageWrapper}>
+      <TouchableOpacity
+        onPress={() => openModal(item.image)}
+        style={styles.imageWrapper}
+      >
         <Image source={item.image} style={styles.image} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.askAIButton}>
-        <MaterialCommunityIcons name="star-four-points" size={20} color="#2F4F2D" />
+        <MaterialCommunityIcons
+          name='star-four-points'
+          size={20}
+          color='#2F4F2D'
+        />
         <Text style={styles.askAIText}>ask AI</Text>
       </TouchableOpacity>
     </View>
@@ -74,7 +90,7 @@ const Feed = () => {
       <Modal
         visible={modalVisible}
         transparent={true}
-        animationType="fade"
+        animationType='fade'
         onRequestClose={closeModal}
       >
         <Pressable style={styles.modalBackground} onPress={closeModal}>
@@ -92,6 +108,7 @@ const styles = StyleSheet.create({
     color: '#2F4F2D',
     marginBottom: 8,
     textDecorationLine: 'underline',
+    marginLeft: 20,
   },
   listContainer: {
     paddingLeft: 12,

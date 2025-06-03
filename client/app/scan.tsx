@@ -114,7 +114,13 @@ export default function ScanPage() {
       const detectResult = await detectResponse.json()
 
       if (!detectResult.leaf_detected) {
-        throw new Error('No leaf detected in the image')
+        router.push({
+          pathname: '/error',
+          params: {
+            imageUri: selectedImage,
+          },
+        })
+        return
       }
 
       setCroppedImage(`data:image/jpeg;base64,${detectResult.cropped_leaf}`)

@@ -77,7 +77,7 @@ def predict_with_crop():
     image_path = "temp_input.jpg"
     image.save(image_path)
 
-    results = yolo_model.predict(image_path, task="detect", conf=0.5)
+    results = yolo_model.predict(image_path, task="detect", conf=0.55)
     boxes = results[0].boxes
     class_ids = boxes.cls.cpu().numpy()
     xyxy = boxes.xyxy.cpu().numpy()
@@ -92,7 +92,7 @@ def predict_with_crop():
             return jsonify({
                 "leaf_detected": True,
                 "cropped_leaf": cropped_base64,
-                "box": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
+                "box": {"x1": x1 - x1 * 0.1, "y1": y1 - y1 * 0.1, "x2": x2 + x2 * 0.1, "y2": y2 + y2 * 0.1}
             })
 
     return jsonify({

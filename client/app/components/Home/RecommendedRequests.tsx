@@ -1,5 +1,14 @@
 import React, { useState } from 'react'
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, Pressable } from 'react-native'
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Modal,
+  Pressable,
+} from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
 const dummyData = [
@@ -7,7 +16,8 @@ const dummyData = [
     id: '1',
     title: 'Turmeric',
     sciName: 'Curcuma longa',
-    description: 'Recommended For: Inflammation, Joint Pain, and Immunity Support',
+    description:
+      'Recommended For: Inflammation, Joint Pain, and Immunity Support',
     image: require('../../../assets/images/home/turmeric.webp'),
   },
   {
@@ -57,7 +67,7 @@ const RecommendedRequests = () => {
       </View>
       <View style={styles.buttonsContainer}>
         <TouchableOpacity style={styles.iconButton}>
-          <Feather name="share" size={20} color="#2F4F2D" />
+          <Feather name='share' size={20} color='#2F4F2D' />
         </TouchableOpacity>
         <TouchableOpacity style={styles.knowMoreButton}>
           <Text style={styles.knowMoreText}>know more</Text>
@@ -80,7 +90,7 @@ const RecommendedRequests = () => {
       <Modal
         visible={modalVisible}
         transparent={true}
-        animationType="fade"
+        animationType='fade'
         onRequestClose={closeModal}
       >
         <Pressable style={styles.modalBackground} onPress={closeModal}>
@@ -98,6 +108,7 @@ const styles = StyleSheet.create({
     color: '#2F4F2D',
     marginBottom: 8,
     textDecorationLine: 'underline',
+    marginLeft: 20,
   },
   listContainer: {
     paddingLeft: 12,
