@@ -1,0 +1,10 @@
+flask
+flask-cors
+tensorflow
+python-dotenv
+Pillow
+numpy
+requests
+ultralytics
+torch
+transformers

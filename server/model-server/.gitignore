@@ -1,0 +1,14 @@
+# virtual environment
+venv
+
+# env 
+.env*
+
+# temp
+temp*
+
+# doc
+documentation.tex
+
+# model
+model/

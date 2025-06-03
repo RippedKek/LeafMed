@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, StyleSheet, ScrollView } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Header from './components/Home/Header'
 import SearchBar from './components/Home/SearchBar'
 import RecommendedRequests from './components/Home/RecommendedRequests'
@@ -7,11 +8,24 @@ import Feed from './components/Home/Feed'
 import BottomNav from './components/Home/BottomNav'
 
 export default function HomePage() {
+  const insets = useSafeAreaInsets()
+
   return (
-    <View style={styles.safeArea}>
+    <View
+      style={[
+        styles.safeArea,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
       <View style={styles.container}>
         <Header />
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.searchWrapper}>
             <SearchBar />
           </View>
@@ -30,8 +44,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#DCECDC',
-    paddingTop: 20,
-    paddingBottom: 20,
   },
   container: {
     flex: 1,
