@@ -57,13 +57,16 @@ const BottomNav = () => {
         />
         <Text style={getTextStyle('/scan')}>Scan</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={getItemStyle('/chat')}>
+      <TouchableOpacity
+        style={getItemStyle('/chat')}
+        onPress={() => router.push('/chat')}
+      >
         <Feather
           name='message-circle'
           size={24}
           color={getIconColor('/chat')}
         />
-        <Text style={getTextStyle('/chat')}>Chat</Text>
+        <Text style={getTextStyle('/chat')}>Ask AI</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={getItemStyle('/profile')}
