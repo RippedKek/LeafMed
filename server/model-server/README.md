@@ -31,6 +31,7 @@ This is the model server component of LeafMed, providing AI-powered leaf disease
    ```bash
    pip install -r requirements.txt
    ```
+4. Download the [`model`](https://drive.google.com/drive/folders/1C87Jo9auMfdu5NpxlxdCaU00GzL30X91?usp=drive_link) directory and paste it in the root directory
 
 ## Environment Variables
 
