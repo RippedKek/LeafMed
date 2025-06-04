@@ -4,6 +4,7 @@ import { Slot, Stack } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
 import { ChatProvider } from './context/ChatContext'
 import { useFonts } from 'expo-font'
+import { useFirebaseSync } from './hooks/useFirebaseSync'
 
 const tokenCache = {
   async getToken(key: string) {
@@ -20,6 +21,19 @@ const tokenCache = {
       return
     }
   },
+}
+
+const RootLayoutContent = () => {
+  useFirebaseSync()
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Slot />
+    </Stack>
+  )
 }
 
 export default function RootLayout() {
@@ -48,13 +62,7 @@ export default function RootLayout() {
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
         <ChatProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
-            <Slot />
-          </Stack>
+          <RootLayoutContent />
         </ChatProvider>
       </ClerkLoaded>
     </ClerkProvider>
