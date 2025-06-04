@@ -20,8 +20,13 @@ const ProfileProCard = () => {
         >
           <Text style={styles.joinText}>JOIN</Text>
           <View style={styles.titleRow}>
-            <Text style={[styles.titleText, { fontFamily: 'LibreBaskervilleRegular' }]}>LeafMed Pro</Text>
-            <MaterialCommunityIcons name="star" size={13} color="#2F4F2D" style={styles.icon} />
+            <Text style={styles.titleText}>LeafMed Pro</Text>
+            <MaterialCommunityIcons
+              name='star'
+              size={13}
+              color='#2F4F2D'
+              style={styles.icon}
+            />
           </View>
           <Text style={styles.priceText}>$1/Month</Text>
           <Text style={styles.featuresText}>No Ads</Text>

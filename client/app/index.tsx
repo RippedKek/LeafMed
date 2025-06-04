@@ -1,5 +1,12 @@
 import React, { useState } from 'react'
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Modal } from 'react-native'
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  Modal,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Header from './components/Home/Header'
 import SearchBar from './components/Home/SearchBar'
@@ -58,12 +65,16 @@ export default function HomePage() {
         <Modal
           visible={modalVisible}
           transparent={true}
-          animationType="fade"
+          animationType='fade'
           onRequestClose={closeModal}
           onDismiss={closeModal}
           statusBarTranslucent={true}
         >
-          <TouchableOpacity style={styles.modalPopup} activeOpacity={1} onPressOut={closeModal}>
+          <TouchableOpacity
+            style={styles.modalPopup}
+            activeOpacity={1}
+            onPressOut={closeModal}
+          >
             <View style={styles.modalOverlay} />
             <ProfileProCard />
           </TouchableOpacity>
@@ -89,6 +100,7 @@ const styles = StyleSheet.create({
   },
   joinButton: {
     paddingVertical: 18,
+    marginHorizontal: 20,
     borderRadius: 12,
     marginBottom: 20,
     alignItems: 'center',
