@@ -1,4 +1,5 @@
 import { generateAIResponse } from '../gemini.js'
+import herbs from '../utils.js'
 
 function formatResponse(text) {
   if (text.includes('Only symptoms are allowed')) {
@@ -24,7 +25,7 @@ export const processChat = async (req, res) => {
     }
 
     const prompt = `
-    The following prompt will give you disease symptoms which you need to predict. After that, give a list of herbal ingredients that will remedy it. The ingredients name should be how they are familiar in the indian subcontinent. Like neem, tulsi, etc. If the prompt is about something else other than symptoms, reply with "Only symptoms are allowed"
+    The following prompt will give you disease symptoms which you need to predict. After that, give a list of herbal ingredients that will remedy it. The ingredients name should be how they are familiar in the indian subcontinent. Like neem, tulsi, etc. If the prompt is about something else other than symptoms, reply with "Only symptoms are allowed". You need to suggest herbs from this list: ${herbs}
 
     Output format:
     {Most probable disease}
