@@ -14,10 +14,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import Header from './components/Home/Header'
 import BottomNav from './components/Home/BottomNav'
+import { getFirestore, doc, getDoc, setDoc } from '@firebase/firestore'
+import { app } from '../firebase'
 
 interface HerbInfo {
   [key: string]: string | string[]
 }
+
+const db = getFirestore(app)
 
 export default function Result() {
   const HOST = process.env.EXPO_PUBLIC_HOST
@@ -38,29 +42,39 @@ export default function Result() {
   const getHerbInfo = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`http://${HOST}:${PORT}/info`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ herb: label }),
-      })
+      const herbRef = doc(db, 'herbs', label.toLowerCase())
+      const herbDoc = await getDoc(herbRef)
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(
-          errorData.userMessage || 'Failed to fetch herb information'
-        )
+      if (herbDoc.exists()) {
+        setHerbInfo(herbDoc.data() as HerbInfo)
+        setModalVisible(true)
+      } else {
+        const response = await fetch(`http://${HOST}:${PORT}/info`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ herb: label }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(
+            errorData.userMessage || 'Failed to fetch herb information'
+          )
+        }
+
+        const data = await response.json()
+
+        if (!data.info) {
+          throw new Error('No information available for this herb')
+        }
+
+        await setDoc(herbRef, data.info)
+
+        setHerbInfo(data.info)
+        setModalVisible(true)
       }
-
-      const data = await response.json()
-
-      if (!data.info) {
-        throw new Error('No information available for this herb')
-      }
-
-      setHerbInfo(data.info)
-      setModalVisible(true)
     } catch (error: any) {
       console.error('Error fetching herb info:', error)
       setHerbInfo({
