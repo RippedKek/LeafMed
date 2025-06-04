@@ -28,6 +28,8 @@ interface Message {
 }
 
 export default function Chat() {
+  const HOST = process.env.EXPO_PUBLIC_HOST
+  const PORT = process.env.EXPO_PUBLIC_BACKEND_PORT
   const router = useRouter()
   const { isLoaded, user } = useUser()
   const [input, setInput] = useState('')
@@ -44,7 +46,7 @@ export default function Chat() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://192.168.0.116:8000/chat', {
+      const response = await fetch(`http://${HOST}:${PORT}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -20,6 +20,8 @@ interface HerbInfo {
 }
 
 export default function Result() {
+  const HOST = process.env.EXPO_PUBLIC_HOST
+  const PORT = process.env.EXPO_PUBLIC_BACKEND_PORT
   const router = useRouter()
   const [modalVisible, setModalVisible] = useState(false)
   const [herbInfo, setHerbInfo] = useState<HerbInfo | null>(null)
@@ -36,7 +38,7 @@ export default function Result() {
   const getHerbInfo = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('http://192.168.0.116:8000/info', {
+      const response = await fetch(`http://${HOST}:${PORT}/info`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

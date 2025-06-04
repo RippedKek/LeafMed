@@ -18,6 +18,9 @@ import BottomNav from './components/Home/BottomNav'
 import * as FileSystem from 'expo-file-system'
 
 export default function Scan() {
+  const HOST = process.env.EXPO_PUBLIC_HOST
+  const PORT = process.env.EXPO_PUBLIC_ML_SERVER_PORT
+  console.log(HOST, PORT)
   const { target } = useLocalSearchParams<{ target: string }>()
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -104,18 +107,15 @@ export default function Scan() {
       })
 
       // First call v2/detect
-      const detectResponse = await fetch(
-        'http://192.168.0.116:5000/v2/detect',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image: base64Image,
-          }),
-        }
-      )
+      const detectResponse = await fetch(`http://${HOST}:${PORT}/v2/detect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64Image,
+        }),
+      })
 
       if (!detectResponse.ok) {
         throw new Error('Failed to detect leaf')
@@ -137,18 +137,15 @@ export default function Scan() {
 
       // Then call v2/predict
       setLoadingStage('predict')
-      const predictResponse = await fetch(
-        'http://192.168.0.116:5000/v2/predict',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image: detectResult.cropped_leaf,
-          }),
-        }
-      )
+      const predictResponse = await fetch(`http://${HOST}:${PORT}/v2/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: detectResult.cropped_leaf,
+        }),
+      })
 
       if (!predictResponse.ok) {
         throw new Error('Failed to get prediction')
