@@ -10,60 +10,17 @@ import {
   Image,
   ScrollView,
 } from 'react-native'
-import { Feather } from '@expo/vector-icons'
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useUser, useAuth } from '@clerk/clerk-expo'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import ProfileProCard from './components/ProfileProCard'
-
-interface Remedy {
-  name: string
-  dosage: string
-  recipe: string
-  image: any
-}
-
-interface Disease {
-  id: string
-  name: string
-  symptoms: string
-  remedies: Remedy[]
-}
-
-const dummyPinnedDiseases: Disease[] = [
-  {
-    id: '1',
-    name: 'Common Cold',
-    symptoms: 'Sneezing, Runny nose, Sore throat',
-    remedies: [
-      {
-        name: 'Ginger Tea',
-        dosage: '2 cups daily',
-        recipe: 'Boil ginger slices in water for 10 minutes and drink warm.',
-        image: require('../assets/images/home/basil.webp'),
-      },
-      {
-        name: 'Honey Lemon',
-        dosage: '1 tbsp honey with lemon juice daily',
-        recipe: 'Mix honey and lemon in warm water and drink.',
-        image: require('../assets/images/home/neem.jpg'),
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Flu',
-    symptoms: 'Fever, Cough, Body aches',
-    remedies: [
-      {
-        name: 'Turmeric Milk',
-        dosage: '1 glass daily',
-        recipe: 'Mix turmeric powder in warm milk and drink before bed.',
-        image: require('../assets/images/home/turmeric.webp'),
-      },
-    ],
-  },
-]
+import {
+  useUserStore,
+  PinnedRemedy,
+  State,
+  Action,
+} from './hooks/useFirebaseSync'
 
 const ProfilePage = () => {
   const router = useRouter()
@@ -71,25 +28,44 @@ const ProfilePage = () => {
   const { user } = useUser()
   const insets = useSafeAreaInsets()
   const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false)
-  const [isEditingEmail, setIsEditingEmail] = useState<boolean>(false)
-  const [selectedDisease, setSelectedDisease] = useState<Disease | null>(null)
+  const [selectedRemedy, setSelectedRemedy] = useState<PinnedRemedy | null>(
+    null
+  )
   const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const pinnedRemedies = useUserStore(
+    (state: State & Action) => state.pinnedRemedies
+  )
+  const removePinnedRemedy = useUserStore(
+    (state: State & Action) => state.removePinnedRemedy
+  )
 
   const [username, setUsername] = useState<string>(
     user?.username || user?.firstName + ' ' + user?.lastName || ''
   )
-  const [email, setEmail] = useState<string>(
-    user?.emailAddresses[0]?.emailAddress || ''
-  )
+  const [email] = useState<string>(user?.emailAddresses[0]?.emailAddress || '')
 
-  const openDiseaseModal = (disease: Disease) => {
-    setSelectedDisease(disease)
+  const openRemedyModal = (remedy: PinnedRemedy) => {
+    setSelectedRemedy(remedy)
     setModalVisible(true)
   }
 
-  const closeDiseaseModal = () => {
-    setSelectedDisease(null)
+  const closeRemedyModal = () => {
+    setSelectedRemedy(null)
     setModalVisible(false)
+  }
+
+  const handleUnpin = async (remedy: PinnedRemedy) => {
+    if (!user) {
+      console.error('No user found')
+      return
+    }
+
+    try {
+      await removePinnedRemedy(user.id, remedy)
+      closeRemedyModal()
+    } catch (error) {
+      console.error('Error unpinning remedy:', error)
+    }
   }
 
   const handleSignOut = async () => {
@@ -142,7 +118,6 @@ const ProfilePage = () => {
               onChangeText={setUsername}
               autoCapitalize='none'
             />
-
             <TouchableOpacity
               style={styles.saveButton}
               onPress={() => setIsEditingUsername(false)}
@@ -171,25 +146,37 @@ const ProfilePage = () => {
       </View>
 
       <View style={styles.pinnedContainer}>
-        <Text style={styles.pinnedTitle}>Pinned Recipes</Text>
-        <FlatList
-          data={dummyPinnedDiseases}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pinnedList}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.diseaseItem}
-              onPress={() => openDiseaseModal(item)}
-            >
-              <Text style={styles.diseaseName}>{item.name}</Text>
-            </TouchableOpacity>
-          )}
-        />
+        <Text style={styles.pinnedTitle}>Pinned Remedies</Text>
+        {pinnedRemedies.length > 0 ? (
+          <FlatList
+            data={pinnedRemedies}
+            keyExtractor={(item) => item.dateAdded}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.pinnedList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.remedyItem}
+                onPress={() => openRemedyModal(item)}
+              >
+                <Text style={styles.remedyName}>{item.disease}</Text>
+                <Text style={styles.remedyDate}>
+                  {new Date(item.dateAdded).toLocaleDateString()}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        ) : (
+          <Text style={styles.noRemediesText}>
+            No pinned remedies yet. Chat with AI to get recommendations!
+          </Text>
+        )}
         <View style={styles.profileProCardContainerWithMargin}>
           <ProfileProCard />
-          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+          >
             <Text style={styles.signOutButtonText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
@@ -199,31 +186,41 @@ const ProfilePage = () => {
         visible={modalVisible}
         transparent={true}
         animationType='slide'
-        onRequestClose={closeDiseaseModal}
+        onRequestClose={closeRemedyModal}
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            {selectedDisease && (
+            {selectedRemedy && (
               <>
-                <Text style={styles.modalTitle}>{selectedDisease.name}</Text>
-                <Text style={styles.modalSubtitle}>Symptoms:</Text>
-                <Text style={styles.modalText}>{selectedDisease.symptoms}</Text>
-                <Text style={styles.modalSubtitle}>Suggested Remedies:</Text>
-                {selectedDisease.remedies.map((remedy, index) => (
-                  <View key={index} style={styles.remedyContainer}>
-                    <Image source={remedy.image} style={styles.remedyImage} />
-                    <View style={styles.remedyTextContainer}>
-                      <Text style={styles.remedyName}>{remedy.name}</Text>
-                      <Text style={styles.remedyDosage}>
-                        Dosage: {remedy.dosage}
-                      </Text>
-                      <Text style={styles.remedyRecipe}>{remedy.recipe}</Text>
-                    </View>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>
+                    {selectedRemedy.disease}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.unpinButton}
+                    onPress={() => handleUnpin(selectedRemedy)}
+                  >
+                    <MaterialCommunityIcons
+                      name='pin-off'
+                      size={24}
+                      color='#ff6b6b'
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.modalSubtitle}>Recommended Herbs:</Text>
+                {selectedRemedy.ingredients.map((ingredient, index) => (
+                  <View key={index} style={styles.ingredientContainer}>
+                    <Text style={styles.ingredientName}>
+                      • {ingredient.name}
+                    </Text>
+                    <Text style={styles.ingredientUsage}>
+                      {ingredient.usage}
+                    </Text>
                   </View>
                 ))}
                 <TouchableOpacity
                   style={styles.closeButton}
-                  onPress={closeDiseaseModal}
+                  onPress={closeRemedyModal}
                 >
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
@@ -347,33 +344,31 @@ const styles = StyleSheet.create({
   pinnedList: {
     paddingLeft: 10,
   },
-  diseaseItem: {
+  remedyItem: {
     backgroundColor: '#DCECDC',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 20,
     marginRight: 12,
+    minWidth: 150,
   },
-  diseaseName: {
+  remedyName: {
     color: '#2F4F2D',
     fontWeight: 'bold',
     fontSize: 16,
+    marginBottom: 4,
   },
-  signOutButton: {
-    backgroundColor: '#2F4F2D',
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
+  remedyDate: {
+    color: '#2F4F2D',
+    fontSize: 12,
+    opacity: 0.7,
   },
-  signOutButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  signOutButtonContainer: {
+  noRemediesText: {
+    color: '#2F4F2D',
+    fontSize: 14,
+    fontStyle: 'italic',
+    textAlign: 'center',
     marginTop: 10,
-    marginLeft: 10,
   },
   modalBackground: {
     flex: 1,
@@ -400,35 +395,30 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 6,
   },
-  modalText: {
-    fontSize: 16,
-    color: '#1B3B2D',
-  },
-  remedyContainer: {
+  modalHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  unpinButton: {
+    padding: 4,
+  },
+  ingredientContainer: {
     marginBottom: 12,
+    paddingLeft: 8,
   },
-  remedyImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  remedyTextContainer: {
-    flex: 1,
-  },
-  remedyName: {
-    fontWeight: 'bold',
+  ingredientName: {
     fontSize: 16,
+    fontWeight: 'bold',
     color: '#2F4F2D',
+    marginBottom: 4,
   },
-  remedyDosage: {
+  ingredientUsage: {
     fontSize: 14,
     color: '#1B3B2D',
-  },
-  remedyRecipe: {
-    fontSize: 14,
-    color: '#1B3B2D',
+    fontStyle: 'italic',
+    paddingLeft: 16,
   },
   closeButton: {
     backgroundColor: '#2F4F2D',
@@ -448,6 +438,18 @@ const styles = StyleSheet.create({
   profileProCardContainerWithMargin: {
     alignItems: 'center',
     marginTop: 30,
+  },
+  signOutButton: {
+    backgroundColor: '#2F4F2D',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  signOutButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 13,
   },
 })
 

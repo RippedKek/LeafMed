@@ -11,30 +11,38 @@ import {
   Platform,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import Header from './components/Home/Header'
 import BottomNav from './components/Home/BottomNav'
 import { useUser } from '@clerk/clerk-expo'
 import { useChat } from './context/ChatContext'
-
-interface Ingredient {
-  name: string
-  usage: string
-}
+import {
+  useUserStore,
+  PinnedRemedy,
+  State,
+  Action,
+  useFirebaseSync,
+} from './hooks/useFirebaseSync'
 
 interface Message {
   text: string
   isUser: boolean
   aiResponse?: {
     disease: string
-    ingredients: Ingredient[]
+    ingredients: Array<{
+      name: string
+      usage: string
+    }>
   }
 }
 
 interface ChatResponse {
   disease: string
-  ingredients: Ingredient[]
+  ingredients: Array<{
+    name: string
+    usage: string
+  }>
 }
 
 export default function Chat() {
@@ -46,6 +54,13 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false)
   const scrollViewRef = useRef<ScrollView>(null)
   const { messages, setMessages, clearChat } = useChat()
+  const addPinnedRemedy = useUserStore(
+    (state: State & Action) => state.addPinnedRemedy
+  )
+  const pinnedRemedies = useUserStore(
+    (state: State & Action) => state.pinnedRemedies
+  )
+  useFirebaseSync()
 
   const sendMessage = async () => {
     if (!input.trim()) return
@@ -101,6 +116,27 @@ export default function Chat() {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true })
       }, 100)
+    }
+  }
+
+  const handlePin = async (aiResponse: {
+    disease: string
+    ingredients: Array<{ name: string; usage: string }>
+  }) => {
+    if (!user) {
+      console.error('No user found')
+      return
+    }
+
+    try {
+      const newPinnedRemedy: PinnedRemedy = {
+        disease: aiResponse.disease,
+        ingredients: aiResponse.ingredients,
+        dateAdded: new Date().toISOString(),
+      }
+      await addPinnedRemedy(user.id, newPinnedRemedy)
+    } catch (error) {
+      console.error('Error pinning remedy:', error)
     }
   }
 
@@ -162,9 +198,28 @@ export default function Chat() {
                     </Text>
                   ) : message.aiResponse ? (
                     <View style={styles.aiResponseContainer}>
-                      <Text style={styles.diseaseText}>
-                        {message.aiResponse.disease}
-                      </Text>
+                      <View style={styles.aiResponseHeader}>
+                        <Text style={styles.diseaseText}>
+                          {message.aiResponse.disease}
+                        </Text>
+                        {message.aiResponse.disease !==
+                          'Only symptoms are allowed' && (
+                          <TouchableOpacity
+                            onPress={() => {
+                              console.log('Pin button pressed') // Debug log
+                              handlePin(message.aiResponse!)
+                            }}
+                            style={styles.pinButton}
+                            activeOpacity={0.6}
+                          >
+                            <MaterialCommunityIcons
+                              name='pin'
+                              size={24}
+                              color='#2f4f2d'
+                            />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                       <Text style={styles.ingredientsLabel}>
                         Recommended herbs:
                       </Text>
@@ -267,6 +322,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 16,
   },
   welcomeContainer: {
     flex: 1,
@@ -294,7 +350,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   messageWrapper: {
-    maxWidth: '80%',
+    maxWidth: '85%',
     marginBottom: 12,
     padding: 12,
     borderRadius: 16,
@@ -306,6 +362,7 @@ const styles = StyleSheet.create({
   aiMessage: {
     alignSelf: 'flex-start',
     backgroundColor: '#fff',
+    width: '85%',
   },
   messageText: {
     fontSize: 16,
@@ -365,11 +422,18 @@ const styles = StyleSheet.create({
   aiResponseContainer: {
     width: '100%',
   },
+  aiResponseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   diseaseText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#2f4f2d',
-    marginBottom: 8,
+    flex: 1,
+    marginRight: 8,
   },
   ingredientsLabel: {
     fontSize: 14,
@@ -421,5 +485,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',
+  },
+  pinButton: {
+    padding: 4,
+    zIndex: 1,
   },
 })

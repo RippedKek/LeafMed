@@ -8,7 +8,6 @@ function formatResponse(text) {
   const response = text.split('\n')
   const disease = response[0]
 
-  // Extract ingredients and their instructions
   const ingredients = []
   for (let i = 1; i < response.length; i++) {
     const line = response[i].trim()
