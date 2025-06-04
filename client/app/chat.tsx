@@ -18,13 +18,23 @@ import BottomNav from './components/Home/BottomNav'
 import { useUser } from '@clerk/clerk-expo'
 import { useChat } from './context/ChatContext'
 
+interface Ingredient {
+  name: string
+  usage: string
+}
+
 interface Message {
   text: string
   isUser: boolean
   aiResponse?: {
     disease: string
-    ingredientsArray: string[]
+    ingredients: Ingredient[]
   }
+}
+
+interface ChatResponse {
+  disease: string
+  ingredients: Ingredient[]
 }
 
 export default function Chat() {
@@ -42,7 +52,10 @@ export default function Chat() {
 
     const userMessage = input.trim()
     setInput('')
-    setMessages((prev) => [...prev, { text: userMessage, isUser: true }])
+    setMessages((prev: Message[]) => [
+      ...prev,
+      { text: userMessage, isUser: true },
+    ])
     setIsLoading(true)
 
     try {
@@ -61,21 +74,21 @@ export default function Chat() {
         throw new Error(errorData.userMessage || 'Failed to get response')
       }
 
-      const data = await response.json()
-      setMessages((prev) => [
+      const data: ChatResponse = await response.json()
+      setMessages((prev: Message[]) => [
         ...prev,
         {
-          text: data.response,
+          text: '',
           isUser: false,
           aiResponse: {
             disease: data.disease,
-            ingredientsArray: data.ingredientsArray,
+            ingredients: data.ingredients,
           },
         },
       ])
     } catch (error: any) {
       console.error('Error:', error)
-      setMessages((prev) => [
+      setMessages((prev: Message[]) => [
         ...prev,
         {
           text:
@@ -155,20 +168,19 @@ export default function Chat() {
                       <Text style={styles.ingredientsLabel}>
                         Recommended herbs:
                       </Text>
-                      {message.aiResponse.ingredientsArray.map(
-                        (ingredient, idx) => (
+                      {message.aiResponse.ingredients.map((ingredient, idx) => (
+                        <View key={idx} style={styles.ingredientContainer}>
                           <TouchableOpacity
-                            key={idx}
                             style={styles.ingredientButton}
                             onPress={() =>
                               router.push({
                                 pathname: '/scan',
-                                params: { target: ingredient },
+                                params: { target: ingredient.name },
                               })
                             }
                           >
-                            <Text style={styles.ingredientItem}>
-                              • {ingredient}
+                            <Text style={styles.ingredientName}>
+                              • {ingredient.name}
                             </Text>
                             <Ionicons
                               name='scan-outline'
@@ -177,8 +189,11 @@ export default function Chat() {
                               style={styles.scanIcon}
                             />
                           </TouchableOpacity>
-                        )
-                      )}
+                          <Text style={styles.usageText}>
+                            {ingredient.usage}
+                          </Text>
+                        </View>
+                      ))}
                     </View>
                   ) : (
                     <Text style={[styles.messageText, styles.aiText]}>
@@ -362,20 +377,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 4,
   },
+  ingredientContainer: {
+    marginBottom: 8,
+  },
   ingredientButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
     paddingHorizontal: 8,
     marginLeft: 8,
-    marginBottom: 2,
     borderRadius: 12,
     backgroundColor: 'rgba(47, 79, 45, 0.1)',
   },
-  ingredientItem: {
+  ingredientName: {
     fontSize: 14,
     color: '#2f4f2d',
+    fontWeight: '600',
     flex: 1,
+  },
+  usageText: {
+    fontSize: 12,
+    color: '#2f4f2d',
+    marginLeft: 24,
+    marginTop: 2,
+    fontStyle: 'italic',
   },
   scanIcon: {
     marginLeft: 8,

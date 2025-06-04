@@ -1,11 +1,16 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 
+interface Ingredient {
+  name: string
+  usage: string
+}
+
 interface Message {
   text: string
   isUser: boolean
   aiResponse?: {
     disease: string
-    ingredientsArray: string[]
+    ingredients: Ingredient[]
   }
 }
 
