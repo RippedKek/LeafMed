@@ -1,7 +1,8 @@
 import React from 'react'
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo'
-import { Slot } from 'expo-router'
+import { Slot, Stack } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
+import { ChatProvider } from './context/ChatContext'
 import { useFonts } from 'expo-font'
 
 const tokenCache = {
@@ -46,7 +47,15 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
-        <Slot />
+        <ChatProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Slot />
+          </Stack>
+        </ChatProvider>
       </ClerkLoaded>
     </ClerkProvider>
   )

@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     paddingBottom: 80,
   },
   joinButton: {

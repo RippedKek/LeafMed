@@ -6,11 +6,11 @@ const SearchBar = () => {
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Search"
-        placeholderTextColor="#2F4F2D"
+        placeholder='Search'
+        placeholderTextColor='#2F4F2D'
         style={styles.input}
       />
-      <Feather name="search" size={24} color="#2F4F2D" />
+      <Feather name='search' size={24} color='#2F4F2D' />
     </View>
   )
 }
@@ -28,6 +28,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginHorizontal: 20,
   },
   input: {
     flex: 1,
