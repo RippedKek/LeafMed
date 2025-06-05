@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useTheme } from '../../context/ThemeContext'
 
 interface HerbInfo {
   [key: string]: string | string[]
@@ -27,6 +28,15 @@ const HerbInfoModal: React.FC<HerbInfoModalProps> = ({
   herbInfo,
   herbName,
 }) => {
+  const { theme } = useTheme()
+
+  const modalContentStyle = [
+    styles.modalContent,
+    { backgroundColor: theme === 'dark' ? '#000000' : '#fff' },
+  ]
+
+  const textColor = theme === 'dark' ? '#BFD9C4' : '#2f4f2d'
+
   return (
     <Modal
       animationType='slide'
@@ -35,27 +45,27 @@ const HerbInfoModal: React.FC<HerbInfoModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <View style={modalContentStyle}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{herbName}</Text>
+            <Text style={[styles.modalTitle, { color: textColor }]}>{herbName}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name='close' size={24} color='#2f4f2d' />
+              <Ionicons name='close' size={24} color={textColor} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.modalBody}>
             {herbInfo ? (
               Object.entries(herbInfo).map(([key, value]) => (
                 <View key={key} style={styles.infoSection}>
-                  <Text style={styles.infoLabel}>
+                  <Text style={[styles.infoLabel, { color: textColor }]}>
                     {key.charAt(0).toUpperCase() + key.slice(1)}:
                   </Text>
-                  <Text style={styles.infoText}>
+                  <Text style={[styles.infoText, { color: textColor }]}>
                     {Array.isArray(value) ? value.join(', ') : value}
                   </Text>
                 </View>
               ))
             ) : (
-              <ActivityIndicator size='large' color='#2f4f2d' />
+              <ActivityIndicator size='large' color={textColor} />
             )}
           </ScrollView>
         </View>

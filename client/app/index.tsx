@@ -15,13 +15,35 @@ import Feed from './components/Home/Feed'
 import BottomNav from './components/Home/BottomNav'
 import ProfileProCard from './components/ProfileProCard'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useTheme } from './context/ThemeContext'
+
+const lightTheme = {
+  backgroundColor: '#DCECDC', // light green safe area background in light mode (changed back from white)
+  containerBackground: '#FFFFFF', // white background in light mode
+  textColor: '#2F4F2D', // dark green text in light mode
+  buttonGradientColors: ['#8c52ff', '#00bf63'],
+  buttonTextColor: '#FFFFFF',
+  modalOverlayColor: 'rgba(0,0,0,0.6)',
+}
+
+const darkTheme = {
+  backgroundColor: '#000000', // black background in dark mode
+  containerBackground: '#000000', // changed to black background for whole page in dark mode
+  textColor: '#BFD9C4', // light green text in dark mode
+  buttonGradientColors: ['#00bf63', '#8c52ff'],
+  buttonTextColor: '#FFFFFF', // changed to white to keep button text white in dark mode
+  modalOverlayColor: 'rgba(0,0,0,0.8)',
+}
 
 export default function HomePage() {
   const insets = useSafeAreaInsets()
   const [modalVisible, setModalVisible] = useState(false)
+  const { theme } = useTheme()
 
   const openModal = () => setModalVisible(true)
   const closeModal = () => setModalVisible(false)
+
+  const currentTheme = theme === 'light' ? lightTheme : darkTheme
 
   return (
     <View
@@ -30,10 +52,11 @@ export default function HomePage() {
         {
           paddingTop: insets.top,
           paddingBottom: insets.bottom,
+          backgroundColor: currentTheme.backgroundColor,
         },
       ]}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: currentTheme.containerBackground }]}>
         <Header />
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -41,12 +64,12 @@ export default function HomePage() {
         >
           <TouchableOpacity style={styles.joinButton} onPress={openModal}>
             <LinearGradient
-              colors={['#8c52ff', '#00bf63']}
+              colors={currentTheme.buttonGradientColors}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.joinButtonGradient}
             >
-              <Text style={styles.joinButtonText}>
+              <Text style={[styles.joinButtonText, { color: currentTheme.buttonTextColor }]}>
                 JOIN LeafMed Pro
                 <Text style={styles.starIcon}> ✨</Text>
               </Text>
@@ -75,7 +98,7 @@ export default function HomePage() {
             activeOpacity={1}
             onPressOut={closeModal}
           >
-            <View style={styles.modalOverlay} />
+            <View style={[styles.modalOverlay, { backgroundColor: currentTheme.modalOverlayColor }]} />
             <ProfileProCard />
           </TouchableOpacity>
         </Modal>
@@ -87,11 +110,9 @@ export default function HomePage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#DCECDC',
   },
   container: {
     flex: 1,
-    backgroundColor: '#F5F9F6',
   },
   scrollContent: {
     paddingTop: 10,
@@ -107,7 +128,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   joinButtonText: {
-    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 16,
     fontFamily: 'LibreBaskervilleBold',
@@ -146,7 +166,6 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
     zIndex: -1,
   },
   closeIconContainer: {

@@ -10,10 +10,32 @@ import {
 } from 'react-native'
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter, usePathname } from 'expo-router'
+import { useTheme } from '../../context/ThemeContext'
 
 const BottomNav = () => {
   const router = useRouter()
   const pathname = usePathname()
+  const { theme } = useTheme()
+
+  const lightThemeColors = {
+    backgroundColor: '#DCECDC',
+    textColor: '#2F4F2D',
+    iconColor: '#2F4F2D',
+    selectedBackground: 'rgba(47, 79, 45, 0.1)',
+    selectedTextColor: '#1a3019',
+    selectedIconColor: '#1a3019',
+  }
+
+  const darkThemeColors = {
+    backgroundColor: '#2F4F2D',
+    textColor: '#BFD9C4',
+    iconColor: '#BFD9C4',
+    selectedBackground: 'rgba(191, 217, 196, 0.2)',
+    selectedTextColor: '#DCECDC',
+    selectedIconColor: '#DCECDC',
+  }
+
+  const currentColors = theme === 'light' ? lightThemeColors : darkThemeColors
 
   const isSelected = (path: string) => {
     if (path === '/' && pathname === '/') return true
@@ -23,22 +45,22 @@ const BottomNav = () => {
 
   const getItemStyle = (path: string): StyleProp<ViewStyle> => {
     return isSelected(path)
-      ? [styles.navItem, styles.selectedNavItem]
+      ? [styles.navItem, { backgroundColor: currentColors.selectedBackground }]
       : styles.navItem
   }
 
   const getTextStyle = (path: string): StyleProp<TextStyle> => {
     return isSelected(path)
-      ? [styles.label, styles.selectedLabel]
-      : styles.label
+      ? [styles.label, { color: currentColors.selectedTextColor, fontWeight: '600' }]
+      : [styles.label, { color: currentColors.textColor }]
   }
 
   const getIconColor = (path: string) => {
-    return isSelected(path) ? '#1a3019' : '#2F4F2D'
+    return isSelected(path) ? currentColors.selectedIconColor : currentColors.iconColor
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: currentColors.backgroundColor }]}>
       <TouchableOpacity
         style={getItemStyle('/')}
         onPress={() => router.push('/')}
@@ -82,7 +104,6 @@ const BottomNav = () => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#DCECDC',
     paddingVertical: 6,
     justifyContent: 'space-around',
     borderTopLeftRadius: 20,
@@ -99,17 +120,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
   },
-  selectedNavItem: {
-    backgroundColor: 'rgba(47, 79, 45, 0.1)',
-  },
   label: {
     fontSize: 13,
-    color: '#2F4F2D',
     marginTop: 6,
-  },
-  selectedLabel: {
-    color: '#1a3019',
-    fontWeight: '600',
   },
 })
 

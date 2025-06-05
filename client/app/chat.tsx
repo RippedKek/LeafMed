@@ -24,6 +24,7 @@ import {
   Action,
   useFirebaseSync,
 } from './hooks/useFirebaseSync'
+import { useTheme } from './context/ThemeContext'
 
 interface Message {
   text: string
@@ -61,6 +62,26 @@ export default function Chat() {
     (state: State & Action) => state.pinnedRemedies
   )
   useFirebaseSync()
+  const { theme } = useTheme()
+
+
+  const lightThemeColors = {
+    backgroundColor: '#DCECDC',
+    textColor: '#2F4F2D',
+    aiMessageBackground: '#FFFFFF',
+    userMessageBackground: '#2F4F2D',
+    userTextColor: '#FFFFFF',
+  }
+
+  const darkThemeColors = {
+    backgroundColor: '#000000',
+    textColor: '#BFD9C4',
+    aiMessageBackground: '#1B3B2D',
+    userMessageBackground: '#BFD9C4',
+    userTextColor: '#2F4F2D',
+  }
+
+  const currentColors = theme === 'light' ? lightThemeColors : darkThemeColors
 
   const sendMessage = async () => {
     if (!input.trim()) return
@@ -142,14 +163,14 @@ export default function Chat() {
 
   if (!isLoaded) {
     return (
-      <View style={styles.loadingScreen}>
-        <ActivityIndicator size='large' color='#2f4f2d' />
+      <View style={[styles.loadingScreen, { backgroundColor: currentColors.backgroundColor }]}>
+        <ActivityIndicator size='large' color={currentColors.textColor} />
       </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: currentColors.backgroundColor }]} edges={['top', 'bottom']}>
       <Header />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -165,12 +186,12 @@ export default function Chat() {
         >
           {messages.length === 0 ? (
             <View style={styles.welcomeContainer}>
-              <Ionicons name='leaf' size={60} color='#2f4f2d' />
-              <Text style={styles.greeting}>
+              <Ionicons name='leaf' size={60} color={currentColors.textColor} />
+              <Text style={[styles.greeting, { color: currentColors.textColor }]}>
                 Hello, {user?.firstName || 'Guest'}
               </Text>
-              <Text style={styles.welcomeTitle}>Welcome to LeafMed AI!</Text>
-              <Text style={styles.welcomeText}>
+              <Text style={[styles.welcomeTitle, { color: currentColors.textColor }]}>Welcome to LeafMed AI!</Text>
+              <Text style={[styles.welcomeText, { color: currentColors.textColor }]}>
                 Describe your symptoms, and I'll suggest herbal remedies that
                 might help.
               </Text>
@@ -181,8 +202,8 @@ export default function Chat() {
                 style={styles.newChatButton}
                 onPress={clearChat}
               >
-                <Ionicons name='add-circle-outline' size={20} color='#2f4f2d' />
-                <Text style={styles.newChatText}>New Chat</Text>
+                <Ionicons name='add-circle-outline' size={20} color={currentColors.textColor} />
+                <Text style={[styles.newChatText, { color: currentColors.textColor }]}>New Chat</Text>
               </TouchableOpacity>
               {messages.map((message, index) => (
                 <View
@@ -190,16 +211,17 @@ export default function Chat() {
                   style={[
                     styles.messageWrapper,
                     message.isUser ? styles.userMessage : styles.aiMessage,
+                    { backgroundColor: message.isUser ? currentColors.userMessageBackground : currentColors.aiMessageBackground }
                   ]}
                 >
                   {message.isUser ? (
-                    <Text style={[styles.messageText, styles.userText]}>
+                    <Text style={[styles.messageText, styles.userText, { color: currentColors.userTextColor }]}>
                       {message.text}
                     </Text>
                   ) : message.aiResponse ? (
                     <View style={styles.aiResponseContainer}>
                       <View style={styles.aiResponseHeader}>
-                        <Text style={styles.diseaseText}>
+                        <Text style={[styles.diseaseText, { color: currentColors.textColor }]}>
                           {message.aiResponse.disease}
                         </Text>
                         {message.aiResponse.disease !==
@@ -215,18 +237,18 @@ export default function Chat() {
                             <MaterialCommunityIcons
                               name='pin'
                               size={24}
-                              color='#2f4f2d'
+                              color={currentColors.textColor}
                             />
                           </TouchableOpacity>
                         )}
                       </View>
-                      <Text style={styles.ingredientsLabel}>
+                      <Text style={[styles.ingredientsLabel, { color: currentColors.textColor }]}>
                         Recommended herbs:
                       </Text>
                       {message.aiResponse.ingredients.map((ingredient, idx) => (
                         <View key={idx} style={styles.ingredientContainer}>
                           <TouchableOpacity
-                            style={styles.ingredientButton}
+                            style={[styles.ingredientButton, { backgroundColor: theme === 'dark' ? 'rgba(142, 146, 142, 0.1)' : 'rgba(47, 79, 45, 0.1)', }]}
                             onPress={() =>
                               router.push({
                                 pathname: '/scan',
@@ -234,17 +256,17 @@ export default function Chat() {
                               })
                             }
                           >
-                            <Text style={styles.ingredientName}>
+                            <Text style={[styles.ingredientName, { color: currentColors.textColor }]}>
                               • {ingredient.name}
                             </Text>
                             <Ionicons
                               name='scan-outline'
                               size={16}
-                              color='#2f4f2d'
+                              color={currentColors.textColor}
                               style={styles.scanIcon}
                             />
                           </TouchableOpacity>
-                          <Text style={styles.usageText}>
+                          <Text style={[styles.usageText, { color: currentColors.textColor }]}>
                             {ingredient.usage}
                           </Text>
                         </View>
@@ -261,20 +283,20 @@ export default function Chat() {
           )}
           {isLoading && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator color='#2f4f2d' size='small' />
-              <Text style={styles.loadingText}>Analyzing symptoms...</Text>
+              <ActivityIndicator color={currentColors.textColor} size='small' />
+              <Text style={[styles.loadingText, { color: currentColors.textColor }]}>Analyzing symptoms...</Text>
             </View>
           )}
         </ScrollView>
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: currentColors.backgroundColor, borderTopColor: theme === 'dark' ? '#666' : 'rgba(0, 0, 0, 0.1)' }]}>
           <TextInput
-            style={[styles.input, isLoading && styles.inputDisabled]}
+            style={[styles.input, { backgroundColor: theme === 'dark' ? '#2F4F2D' : '#fff', color: theme === 'dark' ? '#BFD9C4' : '#000' }, isLoading && styles.inputDisabled]}
             value={input}
             onChangeText={setInput}
             placeholder={
               isLoading ? 'Please wait...' : 'Describe your symptoms...'
             }
-            placeholderTextColor='#666'
+            placeholderTextColor={theme === 'dark' ? '#BFD9C4' : '#666'}
             multiline
             maxLength={500}
             editable={!isLoading}
@@ -282,6 +304,7 @@ export default function Chat() {
           <TouchableOpacity
             style={[
               styles.sendButton,
+              { backgroundColor: theme === 'dark' ? '#BFD9C4' : '#2f4f2d' },
               (!input.trim() || isLoading) && styles.disabledButton,
             ]}
             onPress={sendMessage}
@@ -290,9 +313,7 @@ export default function Chat() {
             <Ionicons
               name='send'
               size={24}
-              color={
-                input.trim() && !isLoading ? '#fff' : 'rgba(255, 255, 255, 0.5)'
-              }
+              color={theme === 'dark' ? '#2F4F2D' : (input.trim() && !isLoading ? '#fff' : 'rgba(255, 255, 255, 0.5)')}
             />
           </TouchableOpacity>
         </View>
@@ -305,13 +326,11 @@ export default function Chat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#DCECDC',
   },
   loadingScreen: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#DCECDC',
   },
   keyboardAvoid: {
     flex: 1,
@@ -332,20 +351,17 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 18,
-    color: '#2f4f2d',
     marginTop: 12,
     marginBottom: 4,
   },
   welcomeTitle: {
-    fontSize: 24,
-    color: '#2f4f2d',
+    fontSize: 22,
     fontWeight: '600',
     marginTop: 8,
     marginBottom: 10,
   },
   welcomeText: {
     fontSize: 16,
-    color: '#2f4f2d',
     textAlign: 'center',
     opacity: 0.8,
   },
@@ -377,26 +393,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: '#fff',
     padding: 12,
     borderRadius: 16,
     marginBottom: 12,
   },
   loadingText: {
     marginLeft: 8,
-    color: '#2f4f2d',
     fontSize: 14,
   },
   inputContainer: {
     flexDirection: 'row',
     padding: 16,
-    backgroundColor: '#DCECDC',
     borderTopWidth: 1,
     borderTopColor: 'rgba(0, 0, 0, 0.1)',
   },
   input: {
     flex: 1,
-    backgroundColor: '#fff',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -408,15 +420,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#2f4f2d',
     justifyContent: 'center',
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: 'rgba(47, 79, 45, 0.5)',
   },
   inputDisabled: {
-    backgroundColor: '#f5f5f5',
     opacity: 0.7,
   },
   aiResponseContainer: {
@@ -431,13 +440,11 @@ const styles = StyleSheet.create({
   diseaseText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2f4f2d',
     flex: 1,
     marginRight: 8,
   },
   ingredientsLabel: {
     fontSize: 14,
-    color: '#2f4f2d',
     fontWeight: '600',
     marginBottom: 4,
   },
@@ -455,13 +462,11 @@ const styles = StyleSheet.create({
   },
   ingredientName: {
     fontSize: 14,
-    color: '#2f4f2d',
     fontWeight: '600',
     flex: 1,
   },
   usageText: {
     fontSize: 12,
-    color: '#2f4f2d',
     marginLeft: 24,
     marginTop: 2,
     fontStyle: 'italic',
@@ -474,14 +479,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: 'rgba(47, 79, 45, 0.1)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginBottom: 16,
   },
   newChatText: {
-    color: '#2f4f2d',
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',

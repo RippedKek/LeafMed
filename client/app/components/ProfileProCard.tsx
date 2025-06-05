@@ -57,6 +57,13 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 18,
     overflow: 'hidden',
+    // Drop shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    // Drop shadow for Android
+    elevation: 13,
   },
   gradientBackground: {
     width: 220,

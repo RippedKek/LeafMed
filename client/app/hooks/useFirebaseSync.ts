@@ -126,3 +126,5 @@ export const useFirebaseSync = () => {
     syncUserWithFirebase()
   }, [user, setPinnedRemedies])
 }
+
+export default useFirebaseSync

@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Image,
   Share,
+  Modal,
+  Pressable,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import {
@@ -18,6 +20,7 @@ import {
 } from '@firebase/firestore'
 import { app } from '../../../firebase'
 import HerbInfoModal from '../shared/HerbInfoModal'
+import { useTheme } from '../../context/ThemeContext'
 
 const db = getFirestore(app)
 
@@ -28,10 +31,43 @@ interface HerbInfo {
 const defaultImage = require('../../../assets/images/home/turmeric.webp')
 
 const RecommendedRequests = () => {
+  const { theme } = useTheme()
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedHerb, setSelectedHerb] = useState<HerbInfo | null>(null)
   const [herbs, setHerbs] = useState<HerbInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [imageModalVisible, setImageModalVisible] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<any>(null)
+
+  const openImageModal = (image: any) => {
+    setSelectedImage(image)
+    setImageModalVisible(true)
+  }
+
+  const closeImageModal = () => {
+    setSelectedImage(null)
+    setImageModalVisible(false)
+  }
+  
+  // Added openModal and closeModal to fix errors by aliasing to image modal handlers
+  const openModal = openImageModal;
+  const closeModal = closeImageModal;
+
+  const lightThemeColors = {
+    backgroundColor: '#DCECDC',
+    textColor: '#2F4F2D',
+    buttonBackground: '#BFD9C4',
+    buttonTextColor: '#2F4F2D',
+  }
+
+  const darkThemeColors = {
+    backgroundColor: '#2F4F2D',
+    textColor: '#BFD9C4',
+    buttonBackground: '#1B3B2D',
+    buttonTextColor: '#DCECDC',
+  }
+
+  const currentColors = theme === 'light' ? lightThemeColors : darkThemeColors
 
   useEffect(() => {
     fetchHerbs()
@@ -92,19 +128,19 @@ const RecommendedRequests = () => {
   }
 
   const renderItem = ({ item }: { item: HerbInfo }) => (
-    <View style={styles.card}>
-      <View style={styles.imageWrapper}>
-        <Image source={defaultImage} style={styles.image} />
-      </View>
+    <View style={[styles.card, { backgroundColor: currentColors.backgroundColor }]}>
+      <TouchableOpacity onPress={() => openModal(item.image || defaultImage)} style={styles.imageWrapper}>
+        <Image source={item.image || defaultImage} style={styles.image} />
+      </TouchableOpacity>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.sciName}>{item.scientificName || ''}</Text>
+        <Text style={[styles.title, { color: currentColors.textColor }]}>{item.title}</Text>
+        <Text style={[styles.sciName, { color: currentColors.textColor }]}>{item.scientificName || ''}</Text>
         <View style={styles.descriptionContainer}>
-          <Text style={styles.description} numberOfLines={3}>
+          <Text style={[styles.description, { color: currentColors.textColor }]} numberOfLines={3}>
             {item.description || ''}
           </Text>
           {Array.isArray(item.properties) && item.properties.length > 0 && (
-            <Text style={styles.properties} numberOfLines={2}>
+            <Text style={[styles.properties, { color: currentColors.textColor }]} numberOfLines={2}>
               Properties: {item.properties.join(', ')}
             </Text>
           )}
@@ -112,35 +148,40 @@ const RecommendedRequests = () => {
       </View>
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
-          style={[styles.button, styles.iconButton]}
+          style={[styles.button, styles.iconButton, { backgroundColor: currentColors.buttonBackground }]}
           onPress={() => handleShare(item)}
         >
-          <Feather name='share' size={20} color='#2F4F2D' />
+          <Feather name='share' size={20} color={currentColors.buttonTextColor} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, styles.knowMoreButton]}
+          style={[styles.button, styles.knowMoreButton, { backgroundColor: currentColors.buttonBackground }]}
           onPress={() => {
             setSelectedHerb(item)
             setModalVisible(true)
           }}
         >
-          <Text style={styles.knowMoreText}>know more</Text>
+          <Text style={[styles.knowMoreText, { color: currentColors.buttonTextColor }]}>know more</Text>
         </TouchableOpacity>
       </View>
+      <Modal visible={modalVisible} transparent animationType='fade' onRequestClose={closeModal}>
+        <Pressable style={styles.modalBackground} onPress={closeModal}>
+          <Image source={selectedImage} style={styles.modalImage} />
+        </Pressable>
+      </Modal>
     </View>
   )
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading herbs...</Text>
+        <Text style={[styles.loadingText, { color: currentColors.textColor }]}>Loading herbs...</Text>
       </View>
     )
   }
 
   return (
     <View>
-      <Text style={styles.heading}>Recommended Requests</Text>
+      <Text style={[styles.heading, { color: currentColors.textColor }]}>Recommended Requests</Text>
       <FlatList
         data={herbs}
         renderItem={renderItem}
@@ -160,6 +201,12 @@ const RecommendedRequests = () => {
           herbName={String(selectedHerb.title)}
         />
       )}
+      {/* Image modal popup */}
+      <Modal visible={imageModalVisible} transparent animationType='fade' onRequestClose={closeImageModal}>
+        <Pressable style={styles.modalBackground} onPress={closeImageModal}>
+          <Image source={selectedImage} style={styles.modalImage} />
+        </Pressable>
+      </Modal>
     </View>
   )
 }
@@ -168,7 +215,6 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2F4F2D',
     marginBottom: 8,
     textDecorationLine: 'underline',
     marginLeft: 20,
@@ -177,7 +223,6 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
   },
   card: {
-    backgroundColor: '#DCECDC',
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -219,22 +264,18 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     fontSize: 18,
-    color: '#1B3B2D',
   },
   sciName: {
     fontWeight: 'bold',
     fontSize: 14,
-    color: '#1B3B2D',
     marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#2F4F2D',
     lineHeight: 20,
   },
   properties: {
     fontSize: 14,
-    color: '#2F4F2D',
     lineHeight: 20,
   },
   buttonsContainer: {
@@ -249,7 +290,6 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#BFD9C4',
     borderRadius: 8,
   },
   iconButton: {
@@ -260,15 +300,24 @@ const styles = StyleSheet.create({
   },
   knowMoreText: {
     fontWeight: 'bold',
-    color: '#2F4F2D',
   },
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
   },
   loadingText: {
-    color: '#2F4F2D',
     fontSize: 16,
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '80%',
+    height: '60%',
+    borderRadius: 12,
   },
 })
 

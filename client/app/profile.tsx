@@ -9,6 +9,7 @@ import {
   Modal,
   Image,
   ScrollView,
+  Switch,
 } from 'react-native'
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -21,28 +22,48 @@ import {
   State,
   Action,
 } from './hooks/useFirebaseSync'
+import { useTheme } from './context/ThemeContext'
+
+const lightTheme = {
+  backgroundColor: '#FFFFFF',
+  containerBackground: '#FFFFFF',
+  textColor: '#2F4F2D',
+  secondaryTextColor: '#1B3B2D',
+  inputBorderColor: '#2F4F2D',
+  inputTextColor: '#1B3B2D',
+  pinnedBackground: '#DCECDC',
+  signOutButtonBackground: '#2F4F2D',
+  signOutButtonText: '#FFFFFF',
+}
+
+const darkTheme = {
+  backgroundColor: '#000000',
+  containerBackground: '#000000',
+  textColor: '#BFD9C4',
+  secondaryTextColor: '#DCECDC',
+  inputBorderColor: '#BFD9C4',
+  inputTextColor: '#DCECDC',
+  pinnedBackground: '#2F4F2D',
+  signOutButtonBackground: '#BFD9C4',
+  signOutButtonText: '#2F4F2D',
+}
 
 const ProfilePage = () => {
   const router = useRouter()
   const { signOut } = useAuth()
   const { user } = useUser()
   const insets = useSafeAreaInsets()
-  const [isEditingUsername, setIsEditingUsername] = useState<boolean>(false)
-  const [selectedRemedy, setSelectedRemedy] = useState<PinnedRemedy | null>(
-    null
-  )
-  const [modalVisible, setModalVisible] = useState<boolean>(false)
-  const pinnedRemedies = useUserStore(
-    (state: State & Action) => state.pinnedRemedies
-  )
-  const removePinnedRemedy = useUserStore(
-    (state: State & Action) => state.removePinnedRemedy
-  )
+  const { theme, toggleTheme } = useTheme()
+  const [isEditingUsername, setIsEditingUsername] = useState(false)
+  const [selectedRemedy, setSelectedRemedy] = useState<PinnedRemedy | null>(null)
+  const [modalVisible, setModalVisible] = useState(false)
+  const pinnedRemedies = useUserStore((state: State & Action) => state.pinnedRemedies)
+  const removePinnedRemedy = useUserStore((state: State & Action) => state.removePinnedRemedy)
 
-  const [username, setUsername] = useState<string>(
+  const [username, setUsername] = useState(
     user?.username || user?.firstName + ' ' + user?.lastName || ''
   )
-  const [email] = useState<string>(user?.emailAddresses[0]?.emailAddress || '')
+  const [email] = useState(user?.emailAddresses[0]?.emailAddress || '')
 
   const openRemedyModal = (remedy: PinnedRemedy) => {
     setSelectedRemedy(remedy)
@@ -59,7 +80,6 @@ const ProfilePage = () => {
       console.error('No user found')
       return
     }
-
     try {
       await removePinnedRemedy(user.id, remedy)
       closeRemedyModal()
@@ -77,30 +97,23 @@ const ProfilePage = () => {
     }
   }
 
+  const currentTheme = theme === 'light' ? lightTheme : darkTheme
+
   return (
     <ScrollView
-      style={[
-        styles.scrollView,
-        {
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom + 130,
-        },
-      ]}
-      contentContainerStyle={[styles.container, { flexGrow: 1 }]}
+      style={[styles.scrollView, { backgroundColor: currentTheme.backgroundColor, paddingTop: insets.top, paddingBottom: insets.bottom + 130 }]}
+      contentContainerStyle={[styles.container, { flexGrow: 1, backgroundColor: currentTheme.containerBackground }]}
     >
       <View style={styles.headerRow}>
-        <TouchableOpacity
-          onPress={() => router.push('/')}
-          style={styles.backButton}
-        >
-          <Feather name='arrow-left' size={24} color='#2F4F2D' />
+        <TouchableOpacity onPress={() => router.push('/')} style={styles.backButton}>
+          <Feather name='arrow-left' size={24} color={currentTheme.textColor} />
         </TouchableOpacity>
-        <View style={styles.profileIconContainerCentered}>
+        <View style={[styles.profileIconContainerCentered, { backgroundColor: currentTheme.pinnedBackground }]}>
           {user?.imageUrl ? (
             <Image source={{ uri: user.imageUrl }} style={styles.profileIcon} />
           ) : (
-            <View style={styles.defaultAvatarContainer}>
-              <Text style={styles.defaultAvatarText}>
+            <View style={[styles.defaultAvatarContainer, { backgroundColor: currentTheme.pinnedBackground }]}>
+              <Text style={[styles.defaultAvatarText, { color: currentTheme.textColor }]}>
                 {user?.firstName?.[0] || user?.username?.[0] || '?'}
               </Text>
             </View>
@@ -109,44 +122,51 @@ const ProfilePage = () => {
       </View>
 
       <View style={styles.fieldContainer}>
-        <Text style={styles.label}>Username</Text>
+        <Text style={[styles.label, { color: currentTheme.textColor }]}>Username</Text>
         {isEditingUsername ? (
           <View style={styles.editRow}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: currentTheme.inputBorderColor, color: currentTheme.inputTextColor }]}
               value={username}
               onChangeText={setUsername}
               autoCapitalize='none'
             />
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={() => setIsEditingUsername(false)}
-            >
-              <Text style={styles.saveButtonText}>Save</Text>
+            <TouchableOpacity style={styles.saveButton} onPress={() => setIsEditingUsername(false)}>
+              <Text style={[styles.saveButtonText, { color: theme === 'dark' ? '#BFD9C4' : '#2F4F2D' }]}>Save</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.editRow}>
-            <Text style={styles.value}>{username || 'No username set'}</Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setIsEditingUsername(true)}
-            >
-              <Text style={styles.editButtonText}>Edit</Text>
+            <Text style={[styles.value, { color: currentTheme.secondaryTextColor }]}>{username || 'No username set'}</Text>
+            <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingUsername(true)}>
+              <Text style={[styles.editButtonText, { color: currentTheme.textColor }]}>Edit</Text>
             </TouchableOpacity>
           </View>
         )}
       </View>
 
       <View style={styles.fieldContainer}>
-        <Text style={styles.label}>Email</Text>
+        <Text style={[styles.label, { color: currentTheme.textColor }]}>Email</Text>
         <View style={styles.editRow}>
-          <Text style={styles.value}>{email || 'No email set'}</Text>
+          <Text style={[styles.value, { color: currentTheme.secondaryTextColor }]}>{email || 'No email set'}</Text>
         </View>
       </View>
 
+      {/* Theme toggle switch */}
+      <View style={styles.themeToggleContainer}>
+        <Switch
+          value={theme === 'dark'}
+          onValueChange={toggleTheme}
+          thumbColor={theme === 'dark' ? '#2F4F2D' : '#f4f3f4'}
+          trackColor={{ false: '#767577', true: '#BFD9C4' }}
+        />
+        <Text style={[styles.themeToggleLabel, { color: currentTheme.textColor }]}>
+          {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+        </Text>
+      </View>
+
       <View style={styles.pinnedContainer}>
-        <Text style={styles.pinnedTitle}>Pinned Remedies</Text>
+        <Text style={[styles.pinnedTitle, { color: currentTheme.textColor }]}>Pinned Remedies</Text>
         {pinnedRemedies.length > 0 ? (
           <FlatList
             data={pinnedRemedies}
@@ -155,73 +175,42 @@ const ProfilePage = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.pinnedList}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.remedyItem}
-                onPress={() => openRemedyModal(item)}
-              >
-                <Text style={styles.remedyName}>{item.disease}</Text>
-                <Text style={styles.remedyDate}>
-                  {new Date(item.dateAdded).toLocaleDateString()}
-                </Text>
+              <TouchableOpacity style={[styles.remedyItem, { backgroundColor: currentTheme.pinnedBackground }]} onPress={() => openRemedyModal(item)}>
+                <Text style={[styles.remedyName, { color: currentTheme.textColor }]}>{item.disease}</Text>
+                <Text style={[styles.remedyDate, { color: currentTheme.textColor, opacity: 0.7 }]}>{new Date(item.dateAdded).toLocaleDateString()}</Text>
               </TouchableOpacity>
             )}
           />
         ) : (
-          <Text style={styles.noRemediesText}>
-            No pinned remedies yet. Chat with AI to get recommendations!
-          </Text>
+          <Text style={[styles.noRemediesText, { color: currentTheme.textColor }]}>No pinned remedies yet. Chat with AI to get recommendations!</Text>
         )}
         <View style={styles.profileProCardContainerWithMargin}>
           <ProfileProCard />
-          <TouchableOpacity
-            style={styles.signOutButton}
-            onPress={handleSignOut}
-          >
-            <Text style={styles.signOutButtonText}>Sign Out</Text>
+          <TouchableOpacity style={[styles.signOutButton, { backgroundColor: currentTheme.signOutButtonBackground }]} onPress={handleSignOut}>
+            <Text style={[styles.signOutButtonText, { color: currentTheme.signOutButtonText }]}>Sign Out</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType='slide'
-        onRequestClose={closeRemedyModal}
-      >
+      <Modal visible={modalVisible} transparent animationType='slide' onRequestClose={closeRemedyModal}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             {selectedRemedy && (
               <>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>
-                    {selectedRemedy.disease}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.unpinButton}
-                    onPress={() => handleUnpin(selectedRemedy)}
-                  >
-                    <MaterialCommunityIcons
-                      name='pin-off'
-                      size={24}
-                      color='#ff6b6b'
-                    />
+                  <Text style={[styles.modalTitle, { color: currentTheme.textColor }]}>{selectedRemedy.disease}</Text>
+                  <TouchableOpacity style={styles.unpinButton} onPress={() => handleUnpin(selectedRemedy)}>
+                    <MaterialCommunityIcons name='pin-off' size={24} color='#ff6b6b' />
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.modalSubtitle}>Recommended Herbs:</Text>
+                <Text style={[styles.modalSubtitle, { color: currentTheme.textColor }]}>Recommended Herbs:</Text>
                 {selectedRemedy.ingredients.map((ingredient, index) => (
                   <View key={index} style={styles.ingredientContainer}>
-                    <Text style={styles.ingredientName}>
-                      • {ingredient.name}
-                    </Text>
-                    <Text style={styles.ingredientUsage}>
-                      {ingredient.usage}
-                    </Text>
+                    <Text style={[styles.ingredientName, { color: currentTheme.textColor }]}>• {ingredient.name}</Text>
+                    <Text style={[styles.ingredientUsage, { color: currentTheme.secondaryTextColor }]}>{ingredient.usage}</Text>
                   </View>
                 ))}
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={closeRemedyModal}
-                >
+                <TouchableOpacity style={styles.closeButton} onPress={closeRemedyModal}>
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
               </>
@@ -236,7 +225,6 @@ const ProfilePage = () => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   container: {
     paddingHorizontal: 20,
@@ -261,19 +249,16 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     overflow: 'hidden',
-    backgroundColor: '#DCECDC',
   },
   defaultAvatarContainer: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#DCECDC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   defaultAvatarText: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#2F4F2D',
   },
   profileIcon: {
     width: '100%',
@@ -286,12 +271,10 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#2F4F2D',
     marginBottom: 6,
   },
   value: {
     fontSize: 16,
-    color: '#1B3B2D',
     flex: 1,
   },
   editRow: {
@@ -300,35 +283,40 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    borderColor: '#2F4F2D',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 16,
-    color: '#1B3B2D',
   },
   editButton: {
     marginLeft: 10,
-    backgroundColor: '#BFD9C4',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   editButtonText: {
-    color: '#2F4F2D',
     fontWeight: 'bold',
   },
   saveButton: {
     marginLeft: 10,
-    backgroundColor: '#2F4F2D',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: '#2F4F2D', // default dark green for light mode
     fontWeight: 'bold',
+    fontSize: 16,
+  },
+  themeToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  themeToggleLabel: {
+    marginLeft: 10,
+    fontSize: 16,
   },
   pinnedContainer: {
     marginTop: 10,
@@ -337,7 +325,6 @@ const styles = StyleSheet.create({
   pinnedTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2F4F2D',
     marginBottom: 10,
     textDecorationLine: 'underline',
   },
@@ -345,7 +332,6 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   remedyItem: {
-    backgroundColor: '#DCECDC',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 20,
@@ -353,18 +339,15 @@ const styles = StyleSheet.create({
     minWidth: 150,
   },
   remedyName: {
-    color: '#2F4F2D',
     fontWeight: 'bold',
     fontSize: 16,
     marginBottom: 4,
   },
   remedyDate: {
-    color: '#2F4F2D',
     fontSize: 12,
     opacity: 0.7,
   },
   noRemediesText: {
-    color: '#2F4F2D',
     fontSize: 14,
     fontStyle: 'italic',
     textAlign: 'center',
@@ -377,7 +360,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
     maxHeight: '80%',
@@ -385,13 +367,11 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#2F4F2D',
     marginBottom: 10,
   },
   modalSubtitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2F4F2D',
     marginTop: 10,
     marginBottom: 6,
   },
@@ -411,24 +391,20 @@ const styles = StyleSheet.create({
   ingredientName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2F4F2D',
     marginBottom: 4,
   },
   ingredientUsage: {
     fontSize: 14,
-    color: '#1B3B2D',
     fontStyle: 'italic',
     paddingLeft: 16,
   },
   closeButton: {
-    backgroundColor: '#2F4F2D',
     paddingVertical: 10,
     borderRadius: 12,
     marginTop: 10,
     alignItems: 'center',
   },
   closeButtonText: {
-    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -440,17 +416,16 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   signOutButton: {
-    backgroundColor: '#2F4F2D',
     paddingVertical: 9,
     paddingHorizontal: 14,
     borderRadius: 12,
     alignSelf: 'flex-start',
   },
   signOutButtonText: {
-    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 13,
   },
 })
 
 export default ProfilePage
+

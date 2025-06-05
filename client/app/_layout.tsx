@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store'
 import { ChatProvider } from './context/ChatContext'
 import { useFonts } from 'expo-font'
 import { useFirebaseSync } from './hooks/useFirebaseSync'
+import { ThemeProvider } from './context/ThemeContext'
 
 const tokenCache = {
   async getToken(key: string) {
@@ -62,7 +63,9 @@ export default function RootLayout() {
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
         <ChatProvider>
-          <RootLayoutContent />
+          <ThemeProvider>
+            <RootLayoutContent />
+          </ThemeProvider>
         </ChatProvider>
       </ClerkLoaded>
     </ClerkProvider>

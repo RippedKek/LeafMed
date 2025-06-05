@@ -16,12 +16,14 @@ import { router, useLocalSearchParams } from 'expo-router'
 import Header from './components/Home/Header'
 import BottomNav from './components/Home/BottomNav'
 import * as FileSystem from 'expo-file-system'
+import { useTheme } from './context/ThemeContext'
 
 export default function Scan() {
   const HOST = process.env.EXPO_PUBLIC_HOST
   const PORT = process.env.EXPO_PUBLIC_ML_SERVER_PORT
   console.log(HOST, PORT)
   const { target } = useLocalSearchParams<{ target: string }>()
+  const { theme } = useTheme()
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingStage, setLoadingStage] = useState<'detect' | 'predict' | null>(
@@ -36,6 +38,24 @@ export default function Scan() {
     ingredients?: string[]
     matchedTarget?: boolean
   } | null>(null)
+
+  const lightThemeColors = {
+    backgroundColor: '#FFFFFF',
+    textColor: '#2F4F2D',
+    iconColor: '#2F4F2D',
+    buttonBackground: '#BFD9C4',
+    buttonTextColor: '#2F4F2D',
+  }
+
+  const darkThemeColors = {
+    backgroundColor: '#000000',
+    textColor: '#BFD9C4',
+    iconColor: '#BFD9C4',
+    buttonBackground: '#BFD9C4',
+    buttonTextColor: '#2F4F2D',
+  }
+
+  const currentColors = theme === 'light' ? lightThemeColors : darkThemeColors
 
   useEffect(() => {
     if (isLoading) {
@@ -227,13 +247,13 @@ export default function Scan() {
 
   if (!selectedImage) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: currentColors.backgroundColor }]} edges={['top', 'bottom']}>
         <Header />
         <View style={styles.content}>
-          <Ionicons name='leaf' size={80} color='#2f4f2d' />
-          <Text style={styles.title}>Ready to scan your medicinal plant?</Text>
-          <TouchableOpacity style={styles.pickButton} onPress={pickImage}>
-            <Text style={styles.buttonText}>PICK IMAGE</Text>
+          <Ionicons name='leaf' size={80} color={currentColors.iconColor} />
+          <Text style={[styles.title, { color: currentColors.textColor }]}>Ready to scan your medicinal plant?</Text>
+          <TouchableOpacity style={[styles.pickButton, { backgroundColor: currentColors.buttonBackground }]} onPress={pickImage}>
+            <Text style={[styles.buttonText, { color: currentColors.buttonTextColor }]}>PICK IMAGE</Text>
           </TouchableOpacity>
         </View>
         <BottomNav />
@@ -242,7 +262,7 @@ export default function Scan() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: currentColors.backgroundColor }]} edges={['top', 'bottom']}>
       <Header />
       <View style={styles.previewContainer}>
         <Image
@@ -253,17 +273,21 @@ export default function Scan() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={handleRetake}
-            style={styles.actionButton}
+            style={[styles.actionButton, { backgroundColor: currentColors.buttonBackground }]}
             disabled={isLoading}
           >
-            <Text style={styles.buttonText}>Rechoose</Text>
+            <Text style={[styles.buttonText, { color: currentColors.buttonTextColor }]}>Rechoose</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleScanResult}
-            style={[styles.actionButton, isLoading && styles.disabledButton]}
+            style={[
+              styles.actionButton,
+              isLoading && styles.disabledButton,
+              { backgroundColor: currentColors.buttonBackground },
+            ]}
             disabled={isLoading}
           >
-            <Text style={styles.buttonText}>
+            <Text style={[styles.buttonText, { color: currentColors.buttonTextColor }]}>
               {croppedImage ? 'Analyze Leaf' : 'Detect Leaf'}
             </Text>
           </TouchableOpacity>
@@ -272,13 +296,13 @@ export default function Scan() {
       {isLoading && <LoadingOverlay />}
       {target && (
         <View style={styles.targetContainer}>
-          <Text style={styles.targetText}>
+          <Text style={[styles.targetText, { color: currentColors.textColor }]}>
             Looking for: <Text style={styles.targetHighlight}>{target}</Text>
           </Text>
           {collectedIngredients.includes(target) && (
             <View style={styles.successContainer}>
-              <Ionicons name='checkmark-circle' size={24} color='#2f4f2d' />
-              <Text style={styles.successText}>Ingredient collected!</Text>
+              <Ionicons name='checkmark-circle' size={24} color={currentColors.iconColor} />
+              <Text style={[styles.successText, { color: currentColors.textColor }]}>Ingredient collected!</Text>
             </View>
           )}
         </View>
@@ -288,26 +312,26 @@ export default function Scan() {
           {target ? (
             scanResult.matchedTarget ? (
               <View style={styles.matchContainer}>
-                <Text style={styles.matchText}>Match found!</Text>
-                <Text style={styles.collectedText}>
+                <Text style={[styles.matchText, { color: currentColors.textColor }]}>Match found!</Text>
+                <Text style={[styles.collectedText, { color: currentColors.textColor }]}>
                   {target} has been added to your collection
                 </Text>
               </View>
             ) : (
-              <Text style={styles.noMatchText}>
+              <Text style={[styles.noMatchText, { color: '#ff6b6b' }]}>
                 This is not {target}. Please try again.
               </Text>
             )
           ) : (
             <>
-              <Text style={styles.diseaseText}>{scanResult.disease}</Text>
+              <Text style={[styles.diseaseText, { color: currentColors.textColor }]}>{scanResult.disease}</Text>
               {scanResult.ingredients && (
                 <>
-                  <Text style={styles.ingredientsLabel}>
+                  <Text style={[styles.ingredientsLabel, { color: currentColors.textColor }]}>
                     Recommended herbs:
                   </Text>
                   {scanResult.ingredients.map((ingredient, idx) => (
-                    <Text key={idx} style={styles.ingredientItem}>
+                    <Text key={idx} style={[styles.ingredientItem, { color: currentColors.textColor }]}>
                       • {ingredient}
                     </Text>
                   ))}

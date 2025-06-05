@@ -10,6 +10,7 @@ import {
   Pressable,
 } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { useTheme } from '../../context/ThemeContext'
 
 const dummyData = [
   {
@@ -37,8 +38,25 @@ type Item = {
 }
 
 const Feed = () => {
+  const { theme } = useTheme()
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedImage, setSelectedImage] = useState<any>(null)
+
+  const lightThemeColors = {
+    backgroundColor: '#DCECDC',
+    textColor: '#2F4F2D',
+    buttonBackground: '#BFD9C4',
+    buttonTextColor: '#2F4F2D',
+  }
+
+  const darkThemeColors = {
+    backgroundColor: '#2F4F2D',
+    textColor: '#BFD9C4',
+    buttonBackground: '#1B3B2D',
+    buttonTextColor: '#DCECDC',
+  }
+
+  const currentColors = theme === 'light' ? lightThemeColors : darkThemeColors
 
   const openModal = (image: any) => {
     setSelectedImage(image)
@@ -51,34 +69,27 @@ const Feed = () => {
   }
 
   const renderItem = ({ item }: { item: Item }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: currentColors.backgroundColor }]}>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.sciName}>{item.sciName}</Text>
+        <Text style={[styles.title, { color: currentColors.textColor }]}>{item.title}</Text>
+        <Text style={[styles.sciName, { color: currentColors.textColor }]}>{item.sciName}</Text>
         <View style={styles.descriptionContainer}>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text style={[styles.description, { color: currentColors.textColor }]}>{item.description}</Text>
         </View>
       </View>
-      <TouchableOpacity
-        onPress={() => openModal(item.image)}
-        style={styles.imageWrapper}
-      >
+      <TouchableOpacity onPress={() => openModal(item.image)} style={styles.imageWrapper}>
         <Image source={item.image} style={styles.image} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.askAIButton}>
-        <MaterialCommunityIcons
-          name='star-four-points'
-          size={20}
-          color='#2F4F2D'
-        />
-        <Text style={styles.askAIText}>ask AI</Text>
+      <TouchableOpacity style={[styles.askAIButton, { backgroundColor: currentColors.buttonBackground }]}>
+        <MaterialCommunityIcons name='star-four-points' size={20} color={currentColors.buttonTextColor} />
+        <Text style={[styles.askAIText, { color: currentColors.buttonTextColor }]} >ask AI</Text>
       </TouchableOpacity>
     </View>
   )
 
   return (
     <View>
-      <Text style={styles.heading}>Feed</Text>
+      <Text style={[styles.heading, { color: currentColors.textColor }]}>Feed</Text>
       <FlatList
         data={dummyData}
         renderItem={renderItem}
@@ -87,12 +98,7 @@ const Feed = () => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
       />
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType='fade'
-        onRequestClose={closeModal}
-      >
+      <Modal visible={modalVisible} transparent animationType='fade' onRequestClose={closeModal}>
         <Pressable style={styles.modalBackground} onPress={closeModal}>
           <Image source={selectedImage} style={styles.modalImage} />
         </Pressable>
@@ -105,7 +111,6 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2F4F2D',
     marginBottom: 8,
     textDecorationLine: 'underline',
     marginLeft: 20,
@@ -114,7 +119,6 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
   },
   card: {
-    backgroundColor: '#DCECDC',
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -156,17 +160,14 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     fontSize: 18,
-    color: '#1B3B2D',
   },
   sciName: {
     fontWeight: 'bold',
     fontSize: 14,
-    color: '#1B3B2D',
     marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#2F4F2D',
     lineHeight: 20,
   },
   askAIButton: {
@@ -182,7 +183,6 @@ const styles = StyleSheet.create({
   },
   askAIText: {
     fontWeight: 'bold',
-    color: '#2F4F2D',
     marginLeft: 6,
   },
   modalBackground: {

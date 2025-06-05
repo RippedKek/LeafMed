@@ -18,6 +18,8 @@ import { getFirestore, doc, getDoc, setDoc } from '@firebase/firestore'
 import { app } from '../firebase'
 import HerbInfoModal from './components/shared/HerbInfoModal'
 
+import { useTheme } from './context/ThemeContext'
+
 interface HerbInfo {
   [key: string]: string | string[]
 }
@@ -39,6 +41,7 @@ export default function Result() {
       target?: string
       isMatch?: string
     }>()
+  const { theme } = useTheme()
 
   const getHerbInfo = async () => {
     setIsLoading(true)
@@ -90,33 +93,33 @@ export default function Result() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme === 'dark' ? '#000000' : '#DCECDC' }]} edges={['top', 'bottom']}>
       <Header />
       <ScrollView style={styles.content}>
         <View style={styles.imagesContainer}>
           <View style={styles.imageWrapper}>
-            <Text style={styles.imageLabel}>Original Image</Text>
+            <Text style={[styles.imageLabel, { color: theme === 'dark' ? '#BFD9C4' : '#2f4f2d' }]}>Original Image</Text>
             <Image source={{ uri: imageUri }} style={styles.image} />
           </View>
           <View style={styles.imageWrapper}>
-            <Text style={styles.imageLabel}>Detected Leaf</Text>
+            <Text style={[styles.imageLabel, { color: theme === 'dark' ? '#BFD9C4' : '#2f4f2d' }]}>Detected Leaf</Text>
             <Image source={{ uri: croppedImageUri }} style={styles.image} />
           </View>
         </View>
-        <View style={styles.resultContainer}>
-          <Text style={styles.resultTitle}>Scan Result</Text>
-          <Text style={styles.resultText}>{label}</Text>
+        <View style={[styles.resultContainer, { backgroundColor: theme === 'dark' ? '#2F4F2D' : 'rgba(255, 255, 255, 0.9)' }]}>
+          <Text style={[styles.resultTitle, { color: theme === 'dark' ? '#BFD9C4' : '#2f4f2d' }]}>Scan Result</Text>
+          <Text style={[styles.resultText, { color: theme === 'dark' ? '#BFD9C4' : '#2f4f2d' }]}>{label}</Text>
           <TouchableOpacity
-            style={styles.moreInfoButton}
+            style={[styles.moreInfoButton, { backgroundColor: theme === 'dark' ? '#BFD9C4' : '#2f4f2d' }]}
             onPress={getHerbInfo}
             disabled={isLoading}
           >
             <Ionicons
               name='information-circle-outline'
               size={20}
-              color='#DCECDC'
+              color={theme === 'dark' ? '#2F4F2D' : '#DCECDC'}
             />
-            <Text style={styles.moreInfoText}>
+            <Text style={[styles.moreInfoText, { color: theme === 'dark' ? '#2F4F2D' : '#DCECDC' }]}>
               {isLoading ? 'Loading...' : 'Learn More'}
             </Text>
           </TouchableOpacity>
@@ -130,10 +133,10 @@ export default function Result() {
           )}
         </View>
         <TouchableOpacity
-          style={styles.scanButton}
+          style={[styles.scanButton, { backgroundColor: theme === 'dark' ? '#BFD9C4' : '#2f4f2d' }]}
           onPress={() => router.push('/scan')}
         >
-          <Text style={styles.scanButtonText}>SCAN ANOTHER</Text>
+          <Text style={[styles.scanButtonText, { color: theme === 'dark' ? '#2F4F2D' : '#DCECDC' }]}>SCAN ANOTHER</Text>
         </TouchableOpacity>
       </ScrollView>
 
