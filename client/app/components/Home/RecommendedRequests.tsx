@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -6,97 +6,160 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  Modal,
-  Pressable,
+  Share,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  limit,
+  query,
+} from '@firebase/firestore'
+import { app } from '../../../firebase'
+import HerbInfoModal from '../shared/HerbInfoModal'
 
-const dummyData = [
-  {
-    id: '1',
-    title: 'Turmeric',
-    sciName: 'Curcuma longa',
-    description:
-      'Recommended For: Inflammation, Joint Pain, and Immunity Support',
-    image: require('../../../assets/images/home/turmeric.webp'),
-  },
-  {
-    id: '2',
-    title: 'Neem',
-    sciName: 'Azadirachta indica',
-    description: 'Recommended For: Skin Issues (Eczema) + Blood Purification',
-    image: require('../../../assets/images/home/neem.jpg'),
-  },
-]
+const db = getFirestore(app)
 
-type Item = {
-  id: string
-  title: string
-  sciName: string
-  description: string
-  image: any
+interface HerbInfo {
+  [key: string]: string | string[]
 }
+
+const defaultImage = require('../../../assets/images/home/turmeric.webp')
 
 const RecommendedRequests = () => {
   const [modalVisible, setModalVisible] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<any>(null)
+  const [selectedHerb, setSelectedHerb] = useState<HerbInfo | null>(null)
+  const [herbs, setHerbs] = useState<HerbInfo[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const openModal = (image: any) => {
-    setSelectedImage(image)
-    setModalVisible(true)
+  useEffect(() => {
+    fetchHerbs()
+  }, [])
+
+  const fetchHerbs = async () => {
+    try {
+      const herbsQuery = query(collection(db, 'herbs'), limit(3))
+      const querySnapshot = await getDocs(herbsQuery)
+      const herbsList: HerbInfo[] = []
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data()
+        herbsList.push({
+          id: doc.id,
+          title: doc.id.charAt(0).toUpperCase() + doc.id.slice(1),
+          ...data,
+        })
+      })
+
+      setHerbs(herbsList)
+    } catch (error) {
+      console.error('Error fetching herbs:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const closeModal = () => {
-    setModalVisible(false)
-    setSelectedImage(null)
+  const handleShare = async (herb: HerbInfo) => {
+    try {
+      const properties = Array.isArray(herb.properties)
+        ? herb.properties.join(', ')
+        : ''
+      const uses = Array.isArray(herb.uses)
+        ? herb.uses.map((use) => `• ${use}`).join('\n')
+        : ''
+      const precautions = Array.isArray(herb.precautions)
+        ? herb.precautions.map((p) => `• ${p}`).join('\n')
+        : ''
+
+      const shareText = `
+        ${herb.title} (${herb.scientificName || ''})
+
+        ${herb.description || ''}
+
+        ${properties ? `Properties:\n${properties}` : ''}
+
+        ${uses ? `Uses:\n${uses}` : ''}
+
+        ${precautions ? `Precautions:\n${precautions}` : ''}`
+
+      await Share.share({
+        message: shareText.trim(),
+      })
+    } catch (error) {
+      console.error('Error sharing:', error)
+    }
   }
 
-  const renderItem = ({ item }: { item: Item }) => (
+  const renderItem = ({ item }: { item: HerbInfo }) => (
     <View style={styles.card}>
       <View style={styles.imageWrapper}>
-        <TouchableOpacity onPress={() => openModal(item.image)}>
-          <Image source={item.image} style={styles.image} />
-        </TouchableOpacity>
+        <Image source={defaultImage} style={styles.image} />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.sciName}>{item.sciName}</Text>
+        <Text style={styles.sciName}>{item.scientificName || ''}</Text>
         <View style={styles.descriptionContainer}>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.description} numberOfLines={3}>
+            {item.description || ''}
+          </Text>
+          {Array.isArray(item.properties) && item.properties.length > 0 && (
+            <Text style={styles.properties} numberOfLines={2}>
+              Properties: {item.properties.join(', ')}
+            </Text>
+          )}
         </View>
       </View>
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.iconButton}>
+        <TouchableOpacity
+          style={[styles.button, styles.iconButton]}
+          onPress={() => handleShare(item)}
+        >
           <Feather name='share' size={20} color='#2F4F2D' />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.knowMoreButton}>
+        <TouchableOpacity
+          style={[styles.button, styles.knowMoreButton]}
+          onPress={() => {
+            setSelectedHerb(item)
+            setModalVisible(true)
+          }}
+        >
           <Text style={styles.knowMoreText}>know more</Text>
         </TouchableOpacity>
       </View>
     </View>
   )
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading herbs...</Text>
+      </View>
+    )
+  }
+
   return (
     <View>
       <Text style={styles.heading}>Recommended Requests</Text>
       <FlatList
-        data={dummyData}
+        data={herbs}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
       />
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType='fade'
-        onRequestClose={closeModal}
-      >
-        <Pressable style={styles.modalBackground} onPress={closeModal}>
-          <Image source={selectedImage} style={styles.modalImage} />
-        </Pressable>
-      </Modal>
+      {selectedHerb && (
+        <HerbInfoModal
+          visible={modalVisible}
+          onClose={() => {
+            setModalVisible(false)
+            setSelectedHerb(null)
+          }}
+          herbInfo={selectedHerb}
+          herbName={String(selectedHerb.title)}
+        />
+      )}
     </View>
   )
 }
@@ -169,39 +232,43 @@ const styles = StyleSheet.create({
     color: '#2F4F2D',
     lineHeight: 20,
   },
+  properties: {
+    fontSize: 14,
+    color: '#2F4F2D',
+    lineHeight: 20,
+  },
   buttonsContainer: {
     flexDirection: 'row',
     position: 'absolute',
     bottom: 15,
     left: 15,
     alignItems: 'center',
+    gap: 8,
+  },
+  button: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#BFD9C4',
+    borderRadius: 8,
   },
   iconButton: {
-    backgroundColor: '#BFD9C4',
-    padding: 8,
-    borderRadius: 8,
-    marginRight: 8,
+    width: 40,
   },
   knowMoreButton: {
-    backgroundColor: '#BFD9C4',
-    paddingVertical: 8,
     paddingHorizontal: 18,
-    borderRadius: 8,
   },
   knowMoreText: {
     fontWeight: 'bold',
     color: '#2F4F2D',
   },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
+  loadingContainer: {
+    padding: 20,
     alignItems: 'center',
   },
-  modalImage: {
-    width: '80%',
-    height: '60%',
-    borderRadius: 12,
+  loadingText: {
+    color: '#2F4F2D',
+    fontSize: 16,
   },
 })
 

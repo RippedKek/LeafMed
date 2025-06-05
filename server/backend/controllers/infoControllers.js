@@ -20,6 +20,7 @@ const getInfo = async (req, res) => {
     The herb is: ${herb}
     Please provide information about the herb in a JSON format with the following structure:
     {
+      "scientificName": "Scientific name of the herb (only the most common name if there are multiple)",
       "description": "Brief description of the herb",
       "uses": "Common medicinal uses",
       "properties": "Medicinal properties",

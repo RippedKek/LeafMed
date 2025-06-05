@@ -16,6 +16,7 @@ import Header from './components/Home/Header'
 import BottomNav from './components/Home/BottomNav'
 import { getFirestore, doc, getDoc, setDoc } from '@firebase/firestore'
 import { app } from '../firebase'
+import HerbInfoModal from './components/shared/HerbInfoModal'
 
 interface HerbInfo {
   [key: string]: string | string[]
@@ -136,42 +137,12 @@ export default function Result() {
         </TouchableOpacity>
       </ScrollView>
 
-      <Modal
-        animationType='slide'
-        transparent={true}
+      <HerbInfoModal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label}</Text>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Ionicons name='close' size={24} color='#2f4f2d' />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalBody}>
-              {herbInfo ? (
-                Object.entries(herbInfo).map(([key, value]) => (
-                  <View key={key} style={styles.infoSection}>
-                    <Text style={styles.infoLabel}>
-                      {key.charAt(0).toUpperCase() + key.slice(1)}:
-                    </Text>
-                    <Text style={styles.infoText}>
-                      {Array.isArray(value) ? value.join(', ') : value}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <ActivityIndicator size='large' color='#2f4f2d' />
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setModalVisible(false)}
+        herbInfo={herbInfo}
+        herbName={label}
+      />
 
       <BottomNav />
     </SafeAreaView>
